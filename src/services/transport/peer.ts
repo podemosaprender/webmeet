@@ -5,6 +5,9 @@ import { Peer } from 'peerjs';
 
 let _myCx : Peer;
 
+/** accept connections with myId
+* @param myId: string with the nick/id other users recognize
+*/
 export function open(myId: string) {
 	_myCx= new Peer(myId, {
 		//XXX: host: location.host, //U: puede ser otro ej 'call-s.podemosaprender.org',
@@ -24,6 +27,10 @@ export function open(myId: string) {
 	});
 }
 
+/** send data to other peer based on their id
+* @param data: any serializable type
+* @param dstId: string with the nick/id other users recognize
+*/
 export function send(data: any, dstId: string) {
 	const conn = _myCx.connect(dstId);
 	console.log("PEER THEIR CX START");
