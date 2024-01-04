@@ -10,7 +10,8 @@ import './App.css'
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 
-import * as Peer from './services/transport/peer';
+import * as Peer from './services/transport/peer'; //XXX: import ONLY needed functions
+import * as IOAudio from './services/io/audio'; //XXX: import ONLY needed functions
 
 //SEE: https://react.dev/learn/typescript#typescript-with-react-components
 type SetValueFn = (v: string) => void;
@@ -28,6 +29,10 @@ function App() {
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
 	const mySend = ()=> Peer.send(`from ${myId} ${(new Date()).toString()}`, peerId);
+	const audioOn = async ()=> {
+		const r= await IOAudio.emitterStart(true);
+		console.log("audioOn",r);
+	}
 
 	return (
 		<PrimeReactProvider>
@@ -41,6 +46,9 @@ function App() {
 			<div className="card flex justify-content-center">
 				<MyInput id="PeerId" value={peerId} setValue={setPeerId} />
 				<Button label="Send" onClick={mySend} />
+			</div>
+			<div className="card flex justify-content-center">
+				<Button label="Start Audio" onClick={audioOn} />
 			</div>
 		</PrimeReactProvider>
 	)

@@ -27,6 +27,11 @@ For QA+CI use
 * ```npm run test-coverage```
 * ```npm run doc```
 
+### Diagnostics and debugging
+
+* PeerJs: use the debug parameter
+* Firefox: write `about:webrtc` in the navbar
+
 ## Architecture
 
 Copied from IP
@@ -38,6 +43,9 @@ Copied from IP
 Copied from lower level protocols
 
 * Packets may include a _forwarding route_ so PeerA can send to PeerD sending to PeerB to PeerC to PeerD
+
+THUS we have _PacketEmitters_ and _PacketListeners_
+* audio
 
 ## Future
 
