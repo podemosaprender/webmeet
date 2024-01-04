@@ -30,7 +30,7 @@ function App() {
 	const [peerId, setPeerId] = useState('');
 	const mySend = ()=> Peer.send(`from ${myId} ${(new Date()).toString()}`, peerId);
 	const audioOn = async ()=> {
-		const r= await IOAudio.emitterStart(true);
+		const r= await IOAudio.emitterStart();
 		console.log("audioOn",r);
 	}
 
