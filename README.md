@@ -37,3 +37,8 @@ Copied from IP
 Copied from lower level protocols
 
 * Packets may include a _forwarding route_ so PeerA can send to PeerD sending to PeerB to PeerC to PeerD
+
+## Future
+
+* https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
+* https://typedoc.org/example/
