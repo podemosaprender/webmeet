@@ -7,7 +7,7 @@ SEE: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia
 //S: Move to Library {
 // }
 
-const AUDIO_SETTINGS = {
+const AUDIO_SETTINGS = { //XXX:CFG
 	channels: 1,
 	codec: "audio/webm;codecs=opus",
 	sampleSize: 8,
@@ -15,13 +15,18 @@ const AUDIO_SETTINGS = {
 	dBSampleSize: 10
 }
 
+/**
+ * @group: Navigator API
+ * SEE: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#browser_compatibility
+*/
 
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;  
-const supported_constraints= navigator.mediaDevices.getSupportedConstraints();
+/**
+ * compute the best options for required mediaStreams (pure)
+ */
+function getMediaStreamsOpts(wantsVideo=false) {
+	let opts= { audio: {}, video: { width: 320, }, };
 
-function getMediaStreams(wantsVideo: boolean) {
-	var opts= { audio: {}, video: { width: 320, }, };
-
+	const supported_constraints= navigator.mediaDevices.getSupportedConstraints();
 	if (supported_constraints.channelCount) { opts.audio.channelCount= AUDIO_SETTINGS.channels; }
 	if (supported_constraints.echoCancellation) { opts.audio.echoCancellation= true ; }
 	if (supported_constraints.sampleSize) { opts.audio.sampleSize= AUDIO_SETTINGS.sampleSize; }
@@ -31,12 +36,18 @@ function getMediaStreams(wantsVideo: boolean) {
 
 	if (!wantsVideo) { opts.video= false; }
 	else {
-		if (supported_constraints.frameRate) { opts.video.frameRate= 1; }
+		if (supported_constraints.frameRate) { opts.video.frameRate= 1; } //XXX:CFG
 	}
-
+	//A: video configured
+	//A: video and audio configured
 	console.log("AUDIO getMediaStreams", {opts, supported_constraints});
 
-	return new Promise( (on_ok, on_err) => navigator.getUserMedia(opts, on_ok, on_err));
+	return opts;
+}
+
+function getMediaStreams(wantsVideo: boolean) {
+	const opts= getMediaStreamsOpts(wantsVideo);
+	return navigator.mediaDevices.getUserMedia(opts); 
 }
 
 //S: detect silence
