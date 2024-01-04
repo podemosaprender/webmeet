@@ -1,24 +1,15 @@
 /** camara, microfono
 
+XXX: poner un "timeout" para recorder si no hay silencio por demasiado rato
 SEE: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia
 
  */
 
+import { AUDIO_SETTINGS, getAudioBlob, getAudioURL } from './util';
 import { SilenceDetector } from './silence-detector';
 
 //S: Move to Library {
 // }
-
-/**
- * XXX:try https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Audio_codecs#amr_adaptive_multi-rate
- */
-const AUDIO_SETTINGS = { //XXX:CFG
-	channels: 1,
-	codec: "audio/webm;codecs=opus", 
-	sampleSize: 8,
-	sampleRate: 8192,
-	dBSampleSize: 10
-}
 
 /**
  * @group: Navigator API
@@ -87,7 +78,7 @@ class ChunkMediaRecorder extends EventTarget {
 			this._mediaRecorder.ondataavailable = (e) => {
 				this._mediaRecorderChunks.push(e.data);
 				//DBG: console.log("CHUNK",(window.xd= e.data));	
-				this.dispatchEvent(new CustomEvent('data', {detail: {blob: e.data}}));	
+				this.dispatchEvent(new CustomEvent('data', {detail: {blob: e.data}}));	//XXX:send mimetype and other data
 			};
 
 		}
@@ -106,11 +97,11 @@ class ChunkMediaRecorder extends EventTarget {
 	}
 
 	getAudioBlob() {
-		return new Blob(this._mediaRecorderChunks, { type: AUDIO_SETTINGS.codec });
+		return getAudioBlob(this._mediaRecorderChunks);
 	}
 
 	getAudioURL() {
-		return URL.createObjectURL(this.getAudioBlob());
+		return getAudioURL(this._mediaRecorderChunks);
 	}
 }
 
@@ -122,16 +113,19 @@ class AudioEmitter extends EventTarget {
 	_silenceDetector?: SilenceDetector;
 
 	_onSound= () => { //A: event listeners must be "the same pointer" to be removed, arrows capture "this"
-		console.log("AUDIO SOUND")
+		//DBG: console.log("AUDIO SOUND")
 		this._recorder?.start();
+		this.dispatchEvent(new Event('sound'));
 	}
 	_onSilence= () => {
-		console.log("AUDIO SILENCE")
+		//DBG: console.log("AUDIO SILENCE")
 		this._recorder?.stop();
+		this.dispatchEvent(new Event('silence'));
 	}
 	_onData= (e: Event) => {
 		if (this._silenceDetector?.isSilent === false) { //A: only if value is set
 			console.log("MIC DATA",e);
+			this.dispatchEvent(new CustomEvent('data',{detail: (e as CustomEvent).detail}));
 		}
 	}
 

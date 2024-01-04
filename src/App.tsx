@@ -1,3 +1,5 @@
+import * as Call from './services/call'
+
 import { useState } from 'react'
 
 import { PrimeReactProvider } from 'primereact/api';
@@ -9,9 +11,6 @@ import './App.css'
 
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-
-import * as Peer from './services/transport/peer'; //XXX: import ONLY needed functions
-import * as IOAudio from './services/io/audio'; //XXX: import ONLY needed functions
 
 //SEE: https://react.dev/learn/typescript#typescript-with-react-components
 type SetValueFn = (v: string) => void;
@@ -28,15 +27,10 @@ function MyInput({id, value, setValue}: MyInputProps) {
 function App() {
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
-	const mySend = ()=> Peer.send(`from ${myId} ${(new Date()).toString()}`, peerId);
-	const audioOn = async ()=> {
-		const r= await IOAudio.getMicAudioEmitter().start();
-		console.log("audioOn",r);
-	}
 
-	const audioOff = async ()=> {
-		const r= await IOAudio.getMicAudioEmitter().stop();
-		console.log("audioOff",r);
+	const mySend = ()=> {
+		peerId.split(',').forEach(peerId => (Call.peers[peerId]=true));
+		Call.sendToAll(`from ${myId} ${(new Date()).toString()}`);
 	}
 
 	return (
@@ -46,15 +40,15 @@ function App() {
 			<p> Edit <code>src/App.tsx</code> and save to test HMR </p>
 			<div className="card flex justify-content-center">
 				<MyInput id="MyId" value={myId} setValue={setMyId} />
-				<Button label="Connect" onClick={() => Peer.open(myId)} />
+				<Button label="Connect" onClick={() => Call.connectAs(myId)} />
 			</div>
 			<div className="card flex justify-content-center">
 				<MyInput id="PeerId" value={peerId} setValue={setPeerId} />
 				<Button label="Send" onClick={mySend} />
 			</div>
 			<div className="card flex justify-content-center">
-				<Button label="Start Audio" onClick={audioOn} />
-				<Button label="Stop Audio" onClick={audioOff} />
+				<Button label="Start Audio" onClick={Call.audioOn} />
+				<Button label="Stop Audio" onClick={Call.audioOff} />
 			</div>
 		</PrimeReactProvider>
 	)

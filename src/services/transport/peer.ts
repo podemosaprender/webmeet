@@ -2,8 +2,15 @@
 * SEE: https://github.com/peers/peerjs#setup
 */
 import { Peer } from 'peerjs';
+import { playAudioChunks } from '../io/audio/util';
 
 let _myCx : Peer;
+/**
+ * peerId -> connection
+ */
+let _peerCx: Record<string,any>= {}
+
+let emuChunks= new Array(); //XXX: must be per peer
 
 /** accept connections with myId
 * @param myId: string with the nick/id other users recognize
@@ -22,7 +29,16 @@ export function open(myId: string) {
   });
 	_myCx.on("connection", (conn) => { //XXX:EMU
 		console.log("PEER ON CX");
-		conn.on("data", (data) => { console.log("PEER DATA",data); });
+		conn.on("data", (data: any) => { 
+			console.log("PEER DATA",data); 
+			if (data.t=='audio-chunk') {
+				emuChunks.push(data.blob);
+				//XXX: se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
+			} else if (data.t=='audio-end') {
+				playAudioChunks( emuChunks );
+				emuChunks= new Array();
+			}
+		});
 		conn.on("open", () => void(conn.send(`hello from ${myId}!`)));
 	});
 }
@@ -32,12 +48,22 @@ export function open(myId: string) {
 * @param dstId: string with the nick/id other users recognize
 */
 export function send(data: any, dstId: string) {
-	const conn = _myCx.connect(dstId);
-	console.log("PEER THEIR CX START");
-	conn.on("open", async (): Promise<void> => {
+	const doSend= async (conn: any) => {
 		console.log("PEER THEIR CX OK");
 		try { await conn.send(data); }
 		catch (ex) { console.log("PEER SEND ERROR",ex) }
-	});
+	}
+
+	let conn = _peerCx[dstId];
+	if (conn) {
+		doSend(conn);
+	} else {
+		conn= _myCx.connect(dstId);
+		console.log("PEER THEIR CX START");
+		conn.on("open", async (): Promise<void> => {
+			_peerCx[dstId]= conn;
+			await doSend(conn) 
+		}); //XXX: handle errors and timeouts
+	}
 }
 
