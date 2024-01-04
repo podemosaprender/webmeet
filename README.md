@@ -25,6 +25,7 @@ For QA+CI use
 * ```npm run lint```
 * ```npm run test```
 * ```npm run test-coverage```
+* ```npm run doc```
 
 ## Architecture
 
