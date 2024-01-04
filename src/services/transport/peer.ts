@@ -23,10 +23,10 @@ export function open(myId: string) {
 	});
 }
 
-export function send(data, dstId: string) {
+export function send(data: any, dstId: string) {
 	const conn = _myCx.connect(dstId);
 	console.log("PEER THEIR CX START");
-	conn.on("open", async (): void => {
+	conn.on("open", async (): Promise<void> => {
 		console.log("PEER THEIR CX OK");
 		try { await conn.send(data); }
 		catch (ex) { console.log("PEER SEND ERROR",ex) }
