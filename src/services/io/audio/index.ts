@@ -20,10 +20,13 @@ import { SilenceDetector } from './silence-detector';
  * compute the best options for required mediaStreams (pure)
  */
 function getMediaStreamsOpts(wantsVideo=false) {
-	let opts= { audio: {}, video: { width: 320, }, };
+	let opts: any= { 
+		audio: {}, 
+		video: { width: 320, }, 
+	};
 
 	const supported_constraints= navigator.mediaDevices.getSupportedConstraints();
-	if (supported_constraints.channelCount) { opts.audio.channelCount= AUDIO_SETTINGS.channels; }
+	//XXX: type: if (supported_constraints.channelCount) { opts.audio.channelCount= AUDIO_SETTINGS.channels; }
 	if (supported_constraints.echoCancellation) { opts.audio.echoCancellation= true ; }
 	if (supported_constraints.sampleSize) { opts.audio.sampleSize= AUDIO_SETTINGS.sampleSize; }
 	if (supported_constraints.sampleRate) { opts.audio.sampleRate= { ideal: AUDIO_SETTINGS.sampleRate}; }

@@ -26,7 +26,7 @@ function onAudioData(e: Event) {
 	sendToAll({t: 'audio-chunk', blob: (e as CustomEvent).detail.blob});
 }
 
-function onAudioSilence(_) {
+function onAudioSilence() {
 	console.log("onAudioSilence");
 	sendToAll({t: 'audio-end'});
 }
