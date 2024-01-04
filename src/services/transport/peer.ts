@@ -1,5 +1,6 @@
-//INFO: WebRTC peerjs transport
-//SEE: https://github.com/peers/peerjs#setup
+/** INFO: WebRTC peerjs transport
+* SEE: https://github.com/peers/peerjs#setup
+*/
 import { Peer } from 'peerjs';
 
 let _myCx : Peer;
