@@ -30,8 +30,13 @@ function App() {
 	const [peerId, setPeerId] = useState('');
 	const mySend = ()=> Peer.send(`from ${myId} ${(new Date()).toString()}`, peerId);
 	const audioOn = async ()=> {
-		const r= await IOAudio.emitterStart();
+		const r= await IOAudio.getMicAudioEmitter().start();
 		console.log("audioOn",r);
+	}
+
+	const audioOff = async ()=> {
+		const r= await IOAudio.getMicAudioEmitter().stop();
+		console.log("audioOff",r);
 	}
 
 	return (
@@ -49,6 +54,7 @@ function App() {
 			</div>
 			<div className="card flex justify-content-center">
 				<Button label="Start Audio" onClick={audioOn} />
+				<Button label="Stop Audio" onClick={audioOff} />
 			</div>
 		</PrimeReactProvider>
 	)

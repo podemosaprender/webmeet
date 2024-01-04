@@ -1,15 +1,20 @@
-/** camara, pantalla, microfono
+/** camara, microfono
 
 SEE: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia
 
  */
 
+import { SilenceDetector } from './silence-detector';
+
 //S: Move to Library {
 // }
 
+/**
+ * XXX:try https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Audio_codecs#amr_adaptive_multi-rate
+ */
 const AUDIO_SETTINGS = { //XXX:CFG
 	channels: 1,
-	codec: "audio/webm;codecs=opus",
+	codec: "audio/webm;codecs=opus", 
 	sampleSize: 8,
 	sampleRate: 8192,
 	dBSampleSize: 10
@@ -50,116 +55,112 @@ function getMediaStreams(wantsVideo: boolean) {
 	return navigator.mediaDevices.getUserMedia(opts); 
 }
 
-//S: detect silence
-let mediaRecorder; //XXX: can't be encapsulated in function?
+//S: media recorder
+		//SEE: https://github.com/mdn/dom-examples/tree/main/media/web-dictaphone
+		//SEE: https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
 
-//VER: https://github.com/webrtc/samples/blob/gh-pages/src/content/getusermedia/volume/js/soundmeter.js
+class ChunkMediaRecorder extends EventTarget {
+	_stream: MediaStream;
+	_datareceived_ms= 200;
 
-function detectSilence(stream, onSoundEnd = _=>{}, onSoundStart = _=>{}, onSoundStream = _=>{}, silence_delay = 500, min_decibels = -80) {
-	const ctx = new AudioContext();
-	const analyser = ctx.createAnalyser();
-	const streamNode = ctx.createMediaStreamSource(stream);
-	streamNode.connect(analyser);
-	analyser.minDecibels = min_decibels;
+	_mediaRecorder?: MediaRecorder;
+	_mediaRecorderChunks= new Array(); //U: guardar a medida que graba
 
-	const data = new Uint8Array(analyser.frequencyBinCount); // will hold our data
-	let silence_start = performance.now();
-	let triggered = true; // trigger only once per silence even
+	constructor(stream: MediaStream, datareceived_ms=200) {
+		super();
+		this._stream= stream;
+		this._datareceived_ms= datareceived_ms;
+	}
 
-	function loop(time) {
-		requestAnimationFrame(loop); // we'll loop every 60th of a second to check
-		analyser.getByteFrequencyData(data); // get current data
+	_getMediaRecorder() {
+		if (this._mediaRecorder==null) {
+			this._mediaRecorder= new MediaRecorder(this._stream, {
+				mimeType: AUDIO_SETTINGS.codec,
+				bitsPerSecond: AUDIO_SETTINGS.sampleRate
+			});
 
-		if (data.some(v => v)) { // if there is data above the given db limit
-			if (triggered) {
-				triggered = false;
-				onSoundStart(mediaRecorder, stream);
+			this._mediaRecorder.onstop = (_) => {
+				this.dispatchEvent(new Event('stop'));	
+				this._mediaRecorder = undefined;
 			}
 
-			silence_start = time; // set it to now
+			this._mediaRecorder.ondataavailable = (e) => {
+				this._mediaRecorderChunks.push(e.data);
+				//DBG: console.log("CHUNK",(window.xd= e.data));	
+				this.dispatchEvent(new CustomEvent('data', {detail: {blob: e.data}}));	
+			};
+
 		}
+		return this._mediaRecorder;
+	}
 
-		if (!triggered && time - silence_start > silence_delay) {
-			onSoundEnd(mediaRecorder, stream);
-			triggered = true;
+	start() {
+		this._getMediaRecorder().start(this._datareceived_ms);
+	}
+
+	stop() {
+		if (this._mediaRecorder) {
+			//		setTimeout(() => { var a = new Audio(audioURL); a.play(); },200); //TODO: usar promise con grabar
+			this._mediaRecorder.stop();
 		}
-
-		if (mediaRecorder) {
-			mediaRecorder.onAudioChunkUpdated = onSoundStream;
-		}
 	}
 
-	loop();
-}
-
-//S: media recorder
-function mediaRecorderStart(stream, datareceived_ms=200) {
-	if (mediaRecorder!=null) {
-    console.log(`mediaRecorder already started`);
-		return;
+	getAudioBlob() {
+		return new Blob(this._mediaRecorderChunks, { type: AUDIO_SETTINGS.codec });
 	}
 
-	//SEE: https://github.com/mdn/dom-examples/tree/main/media/web-dictaphone
-	//SEE: https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
-	mediaRecorder= new MediaRecorder(stream, {
-    mimeType: AUDIO_SETTINGS.codec,
-    bitsPerSecond: AUDIO_SETTINGS.sampleRate
-  });
-
-	var mediaRecorderChunks= []; //U: guardar a medida que graba
-
-	mediaRecorder.onstop = (e) => {
-		let blob = new Blob(mediaRecorderChunks, { type: AUDIO_SETTINGS.codec });
-    let audioUrl = URL.createObjectURL(blob);
-    mediaRecorder.onStopCallback(audioUrl, blob, mediaRecorderChunks);
-    mediaRecorder = null;
+	getAudioURL() {
+		return URL.createObjectURL(this.getAudioBlob());
 	}
-
-  mediaRecorder["onStopCallback"] = () => {}; //XXX: replace by EventEmitter or callbacks, DON'T add props to API objects
-  mediaRecorder["onAudioChunkUpdated"] = () => {};
-
-	mediaRecorder.ondataavailable = (e) => {
-    let headerBlob = (mediaRecorderChunks.length == 0);
-    mediaRecorderChunks.push(e.data);
-    let blob = new Blob([e.data], { type: AUDIO_SETTINGS.codec });
-    mediaRecorder.onAudioChunkUpdated(blob, mediaRecorderChunks, headerBlob);
-	};
-
-	mediaRecorder.start(datareceived_ms);
-}
-
-function mediaRecorderStop(mediaRec) {
-	if (mediaRec) {
-    mediaRec.onStopCallback = (audioURL, blob, audioChunks) => {
-      setTimeout(() => { var a = new Audio(audioURL); a.play(); },200); //TODO: usar promise con grabar
-			//XXX: don't force replay
-    }
-		mediaRec.stop();
-	}
-}
-
-//S: 
-function onSilence(mediaRec) {
-	mediaRecorderStop(mediaRec);
-}
-
-function onSpeak(mediaRec, stream) {
-   mediaRecorderStart(stream);
 }
 
 /**
 * XXX: replace params for EventEmitter
 */
-export async function emitterStart(onSilenceFunc, onSpeakFunc, onReceiveDataFunc) {
-	onSilenceFunc= onSilenceFunc || onSilence; 
-	onSpeakFunc= onSpeakFunc || onSpeak; 
-	onReceiveDataFunc= () => console.log("AUDIO CHUNK");
+class AudioEmitter extends EventTarget {
+	_recorder?: ChunkMediaRecorder;
+	_silenceDetector?: SilenceDetector;
 
-	return await getMediaStreams()
-		.then(stream => {
-				window.xs= stream; //XXX:DBG
-				detectSilence(stream, onSilenceFunc, onSpeakFunc, onReceiveDataFunc, 500, -70);
-		})
-		.catch(ex => console.log("AUDIO ERROR",ex));
+	_onSound= () => { //A: event listeners must be "the same pointer" to be removed, arrows capture "this"
+		console.log("AUDIO SOUND")
+		this._recorder?.start();
+	}
+	_onSilence= () => {
+		console.log("AUDIO SILENCE")
+		this._recorder?.stop();
+	}
+	_onData= (e: Event) => {
+		if (this._silenceDetector?.isSilent === false) { //A: only if value is set
+			console.log("MIC DATA",e);
+		}
+	}
+
+	async start() {
+		const stream= await getMediaStreams(false)
+		this._recorder= new ChunkMediaRecorder(stream);
+		this._silenceDetector= new SilenceDetector(stream, 500); //XXX:CFG
+
+		this._silenceDetector.addEventListener('sound', this._onSound)
+		this._silenceDetector.addEventListener('silence', this._onSilence)
+		this._recorder?.addEventListener('data', this._onData);
+	}
+
+	async stop() {
+		this._recorder?.stop();
+		this._silenceDetector?.stop();
+
+		this._silenceDetector?.removeEventListener('sound', this._onSound)
+		this._silenceDetector?.removeEventListener('silence', this._onSilence)
+		this._recorder?.removeEventListener('data', this._onData);
+
+		this._recorder= undefined;
+		this._silenceDetector= undefined;
+		//A: eventListeners removed to ensure objects are destroyed
+	}
 }
 
+let _micAudioEmitter: AudioEmitter; //A: singleton
+export function getMicAudioEmitter() { 
+	_micAudioEmitter= _micAudioEmitter || new AudioEmitter();
+	return _micAudioEmitter;
+}
