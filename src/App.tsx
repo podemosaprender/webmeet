@@ -14,7 +14,7 @@ import * as Peer from './services/transport/peer';
 
 //SEE: https://react.dev/learn/typescript#typescript-with-react-components
 type SetValueFn = (v: string) => void;
-interface MyInputProps {id: string, value: string, setValue: setValueFn};
+interface MyInputProps {id: string, value: string, setValue: SetValueFn}
 function MyInput({id, value, setValue}: MyInputProps) {
 	return (
 		<span className="p-float-label">
@@ -27,7 +27,7 @@ function MyInput({id, value, setValue}: MyInputProps) {
 function App() {
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
-	const mySend = ()=> Peer.send(`from ${myId} ${new Date()}`, peerId);
+	const mySend = ()=> Peer.send(`from ${myId} ${(new Date()).toString()}`, peerId);
 
 	return (
 		<PrimeReactProvider>
