@@ -19,5 +19,15 @@ export function	getAudioURL(chunks: any) {
 
 export function playAudioChunks(chunks: any) {
 	const audioURL= getAudioURL(chunks);
-	setTimeout(() => { var a = new Audio(audioURL); a.play(); },200); //TODO: usar promise 
+	
+	return new Promise( (onOk, _) => {
+		setTimeout(() => { 
+			var a = new Audio(audioURL); 
+			//SEE: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement#events
+			a.addEventListener('ended', onOk);
+			a.addEventListener('error', onOk); //A: only to know it finished
+			a.play(); 
+		},200); //TODO: usar promise 
+	});
+
 }

@@ -7,6 +7,23 @@ import * as IOAudio from './io/audio/index'; //XXX: import ONLY needed functions
 import { playAudioChunks } from './io/audio/util';
 
 let emuChunks= new Array(); //XXX: must be per peer
+let emuAudioQueue= new Array();
+let emuAudioIsPlaying= false;
+
+async function processAudioChunks(chunks: any[]) {
+	emuAudioQueue.push(chunks);
+	console.log("processAudioChunks add", emuAudioIsPlaying, emuAudioQueue.length);
+	if (emuAudioIsPlaying) return; //A: will be played later by the loop below
+	emuAudioIsPlaying= true;
+	let next;
+	while (next= emuAudioQueue.shift()) {
+		console.log("processAudioChunks next", emuAudioIsPlaying, emuAudioQueue.length);
+		await playAudioChunks( next ); //XXX:don't start before previous finishes, use a queue!
+	}
+	emuAudioIsPlaying= false;
+	console.log("processAudioChunks done", emuAudioIsPlaying, emuAudioQueue.length);
+}
+
 class CallMgr extends EventTarget {
 	_myId= '';
 	peers: Record<string,any> = {}; //XXX: para tener lista de ids, usar setters, getters, etc.
@@ -20,7 +37,7 @@ class CallMgr extends EventTarget {
 			emuChunks.push(data.blob);
 			//XXX: se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
 		} else if (data.t=='audio-end') {
-			playAudioChunks( emuChunks ); //XXX:don't start before previous finishes, use a queue!
+			processAudioChunks( emuChunks ); //A: don't start before previous finishes, use a queue!
 			emuChunks= new Array();
 		} else if (data.t=='open') {
 			this._isOpen= true;
