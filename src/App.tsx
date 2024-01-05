@@ -1,54 +1,64 @@
-import * as Call from './services/call'
+import {callMgr} from './services/call'
 
 import { useState } from 'react'
 
 import { PrimeReactProvider } from 'primereact/api';
+
+import 'primeflex/primeflex.css'
+import 'primeicons/primeicons.css'; //SEE: https://primereact.org/icons/#list
+
 import 'primereact/resources/themes/lara-dark-purple/theme.css'
 //OPT: import "primereact/resources/themes/lara-light-cyan/theme.css";
+
 
 //SEE: https://primereact.org/configuration/
 import './App.css'
 
+import { MyInput } from './components/prototyping';
 import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-
-//SEE: https://react.dev/learn/typescript#typescript-with-react-components
-type SetValueFn = (v: string) => void;
-interface MyInputProps {id: string, value: string, setValue: SetValueFn}
-function MyInput({id, value, setValue}: MyInputProps) {
-	return (
-		<span className="p-float-label">
-			<InputText id={id} value={value} onChange={(e) => setValue(String(e.target.value))} />
-			<label htmlFor={id}>{id}</label>
-		</span>
-	)
-}
+import { Message } from 'primereact/message';
 
 function App() {
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
+	const [micOn, setMicOn] = useState(false);
 
 	const mySend = ()=> {
-		peerId.split(',').forEach(peerId => (Call.peers[peerId]=true));
-		Call.sendToAll(`from ${myId} ${(new Date()).toString()}`);
+		peerId.split(',').forEach(peerId => (callMgr.peers[peerId]=true));
+		callMgr.sendToAll(`from ${myId} ${(new Date()).toString()}`);
 	}
+
+	const micToggle = ()=>  {
+		const newStatus= ! micOn;
+		setMicOn( newStatus ); 
+		if (newStatus) callMgr.audioOn(); else callMgr.audioOff();
+	}
+
+	const isLocalhost= window.location.href.match(/(localhost)|(127\.0\.0\.1)/)!=null;
 
 	return (
 		<PrimeReactProvider>
-			<h1>WebMeet</h1>
-			<p> WARNING: does NOT work if the page is loaded from localhost, use your LAN IP</p>
-			<p> Edit <code>src/App.tsx</code> and save to test HMR </p>
-			<div className="card flex justify-content-center">
-				<MyInput id="MyId" value={myId} setValue={setMyId} />
-				<Button label="Connect" onClick={() => Call.connectAs(myId)} />
-			</div>
-			<div className="card flex justify-content-center">
-				<MyInput id="PeerId" value={peerId} setValue={setPeerId} />
-				<Button label="Send" onClick={mySend} />
-			</div>
-			<div className="card flex justify-content-center">
-				<Button label="Start Audio" onClick={Call.audioOn} />
-				<Button label="Stop Audio" onClick={Call.audioOff} />
+			<p><small>WebMeet</small></p>
+			{ isLocalhost 
+				? <Message severity="error" text="WARNING: does NOT work if the page is loaded from localhost, use your LAN IP" />
+				: null
+			}
+
+			<div className="card flex flex-column md:flex-row gap-3">
+				<div className="p-inputgroup flex-1">
+					<MyInput id="MyId" value={myId} setValue={setMyId} />
+					<Button icon="pi pi-user" onClick={() => callMgr.connectAs(myId)} />
+				</div>
+
+				<div className="p-inputgroup flex-1">
+					<MyInput id="PeerIds" value={peerId} setValue={setPeerId} />
+					<Button icon="pi pi-users" onClick={mySend} />
+				</div>
+
+				<div className="p-inputgroup flex-1">
+					<Button icon="pi pi-microphone" onClick={micToggle} outlined={! micOn}/>
+				</div>
+
 			</div>
 		</PrimeReactProvider>
 	)
