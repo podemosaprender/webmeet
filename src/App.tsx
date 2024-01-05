@@ -21,8 +21,11 @@ import { Message } from 'primereact/message';
 function App() {
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
+
 	const [micOn, setMicOn] = useState(false);
 	const [micAudioOn, setMicAudioOn] = useState(false);
+	const [micWantsDetector, setMicWantsDetector] = useState(false);
+
 	const [isOpen, setIsOpen] = useState(false);
 	const [text, setText] = useState('');
 
@@ -47,7 +50,13 @@ function App() {
 	const micToggle = ()=>  {
 		const newStatus= ! micOn;
 		setMicOn( newStatus ); 
-		if (newStatus) callMgr.audioOn(); else callMgr.audioOff();
+		if (newStatus) callMgr.audioOn(micWantsDetector); else callMgr.audioOff();
+	}
+
+	const micToggleDetector = (e)=>  {
+		if (! micOn ) {
+			setMicWantsDetector( ! micWantsDetector );
+		}
 	}
 
 	const isLocalhost= window.location.href.match(/(localhost)|(127\.0\.0\.1)/)!=null;
@@ -79,6 +88,11 @@ function App() {
 						onClick={micToggle} 
 						outlined={! micOn} 
 						badge={ micAudioOn ? '*' : '.' }
+					/>
+					<Button 
+						onClick={micToggleDetector} 
+						label={micWantsDetector ? "auto" : "ptt"}
+						outlined={! setMicWantsDetector }
 					/>
 					<Button icon="pi pi-sort-alt" 
 						onClick={() => callMgr.ping(Object.keys(callMgr.peers)[0])} 

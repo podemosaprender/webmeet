@@ -68,10 +68,10 @@ class CallMgr extends EventTarget {
 		this.sendTo({t:'ping', ping_t: Date.now()}, peerId);
 	}
 
-	async audioOn() {
+	async audioOn(wantsSilenceDetector=true) {
 		IOAudio.getMicAudioEmitter().addEventListener('data',this._onAudioData);
 		IOAudio.getMicAudioEmitter().addEventListener('silence',this._onAudioSilence);
-		const r= await IOAudio.getMicAudioEmitter().start();
+		const r= await IOAudio.getMicAudioEmitter().start(wantsSilenceDetector);
 		console.log("audioOn",r);
 	}
 

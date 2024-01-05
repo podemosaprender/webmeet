@@ -114,35 +114,51 @@ class ChunkMediaRecorder extends EventTarget {
 class AudioEmitter extends EventTarget {
 	_recorder?: ChunkMediaRecorder;
 	_silenceDetector?: SilenceDetector;
+	_isRecording= false;
+	get isRecording() { return this._isRecording }
 
-	_onSound= () => { //A: event listeners must be "the same pointer" to be removed, arrows capture "this"
+	_onData= (e: Event) => {
+			if (!this._silenceDetector || this._silenceDetector?.isSilent === false) { //A: only if value is set
+				//DBG: console.log("MIC DATA",e);
+				this.dispatchEvent(new CustomEvent('data',{detail: (e as CustomEvent).detail}));
+			}
+	}
+
+	/** start audio capture, via SilenceDetector or programmatically
+	 */
+	onSound= () => { //A: event listeners must be "the same pointer" to be removed, arrows capture "this"
 		//DBG: console.log("AUDIO SOUND")
+		this._isRecording= true;
 		this._recorder?.start();
 		this.dispatchEvent(new Event('sound'));
 	}
-	_onSilence= () => {
+	/** stop audio capture, via SilenceDetector or programmatically
+	 */
+	onSilence= () => {
 		//DBG: console.log("AUDIO SILENCE")
+		this._isRecording= false;
 		this._recorder?.stop();
 		this.dispatchEvent(new Event('silence'));
 	}
-	_onData= (e: Event) => {
-		if (this._silenceDetector?.isSilent === false) { //A: only if value is set
-			//DBG: console.log("MIC DATA",e);
-			this.dispatchEvent(new CustomEvent('data',{detail: (e as CustomEvent).detail}));
+
+	async start(wantsSilenceDetector=true) {
+		this.stop(); //A: in case was running? XXX
+
+		const stream= await getMediaStreams(false)
+		this._recorder= new ChunkMediaRecorder(stream);
+		this._recorder?.addEventListener('data', this._onData);
+
+		if (wantsSilenceDetector) {
+			this._silenceDetector= new SilenceDetector(stream,100); //XXX:CFG
+			this._silenceDetector.addEventListener('sound', this.onSound)
+			this._silenceDetector.addEventListener('silence', this.onSilence)
+		} else {
+			this.onSound();
 		}
 	}
 
-	async start() {
-		const stream= await getMediaStreams(false)
-		this._recorder= new ChunkMediaRecorder(stream);
-		this._silenceDetector= new SilenceDetector(stream,100); //XXX:CFG
-
-		this._silenceDetector.addEventListener('sound', this._onSound)
-		this._silenceDetector.addEventListener('silence', this._onSilence)
-		this._recorder?.addEventListener('data', this._onData);
-	}
-
 	async stop() {
+		this.onSilence();
 		this._recorder?.stop();
 		this._silenceDetector?.stop();
 
