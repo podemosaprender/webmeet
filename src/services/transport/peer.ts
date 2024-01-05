@@ -41,7 +41,7 @@ export function open(myId: string, onData: (data: any) => void) {
 		});
 		cx.on("data", (data: any) => { 
 			console.log("PEER DATA",data); 
-			onData(data);
+			onData({...data, id: cx.peer});
 		});
 		cx.on('error', (err: any) => {
 			onData({t: 'error', id: cx.peer, err} ) 
@@ -79,9 +79,11 @@ export async function send(data: any, dstId: string, onData: (data: any) => void
 			onData(data);
 		});
 		cx.on('error', (err: any) => {
+			delete _peerCx[cx.peer];
 			onData({t: 'error', id: cx.peer, err} ) 
 		});
 		cx.on('close', () => {
+			delete _peerCx[cx.peer];
 			onData({t: 'error', id: cx.peer, err: 'close'} ) 
 		});
 	}

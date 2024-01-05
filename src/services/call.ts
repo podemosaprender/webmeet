@@ -13,7 +13,7 @@ class CallMgr extends EventTarget {
 
 	_isOpen= false;
 	get isOpen() { return this._isOpen }
-	get events() { return ['open','sound','silence','peer','text']}
+	get events() { return ['error','open','sound','silence','peer','text']}
 
 	_onTransportData= (data: any) => { //U: standard event handler for all transports
 		if (data.t=='audio-chunk') {
@@ -28,12 +28,18 @@ class CallMgr extends EventTarget {
 		} else if (data.t=='peer') {
 			this.peers[data.id]= true;
 			this.dispatchEvent(new Event('peer'));
+		} else if (data.t=='error') {
+			this.peers[data.id]= false;
+			this.dispatchEvent(new Event('peer'));
+			this.dispatchEvent(new CustomEvent('error',{detail:{msg: String(data.err), id: data.id}}) );
 		} else if (data.t=='text') {
-			this.dispatchEvent(new CustomEvent('text', {detail: data.text}));
+			this.dispatchEvent(new CustomEvent('text', {detail: {text: data.text, id: data.id}}));
 		} else if (data.t=='ping') {
 			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.id);
 		} else if (data.t=='pong') {
-			console.log('CALL pong', data.id, Date.now() - data.ping_t)	
+			let dt= Date.now() - data.ping_t
+			console.log('CALL pong', data.id,dt)	 
+			this.dispatchEvent(new CustomEvent('text', {detail: {text: `PONG ${dt}`, id: data.id}}));
 		} else {
 			console.log("CALL data", data);
 		}
