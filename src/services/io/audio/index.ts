@@ -162,8 +162,8 @@ class AudioEmitter extends EventTarget {
 		this._recorder?.stop();
 		this._silenceDetector?.stop();
 
-		this._silenceDetector?.removeEventListener('sound', this._onSound)
-		this._silenceDetector?.removeEventListener('silence', this._onSilence)
+		this._silenceDetector?.removeEventListener('sound', this.onSound)
+		this._silenceDetector?.removeEventListener('silence', this.onSilence)
 		this._recorder?.removeEventListener('data', this._onData);
 
 		this._recorder= undefined;

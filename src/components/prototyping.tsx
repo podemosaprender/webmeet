@@ -1,7 +1,6 @@
 /** components for fast prototyping
 */
 
-import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 
 //SEE: https://react.dev/learn/typescript#typescript-with-react-components
@@ -12,7 +11,7 @@ export function MyInput({id, value, setValue}: MyInputProps) {
 		<span className="p-float-label">
 			<InputText 
 				id={id} value={value} 
-				onChange={(e) => setValue(String(e.target.value))}  i
+				onChange={(e) => setValue(String(e.target.value))}
 				onInput={(e) => console.log(e)} //XXX: catch enter!
 			/>
 			<label htmlFor={id}>{id}</label>

@@ -28,10 +28,10 @@ function App() {
 	const [micWantsDetector, setMicWantsDetector] = useState(false);
 
 	const [isOpen, setIsOpen] = useState(false);
-	const [text, setText] = useState([]);
+	const [text, setText] = useState(new Array());
 	const [msg, setMsg] = useState('');
 
-	const addText= (m) => {
+	const addText= (m: any) => {
 		let t2= [
 			...(text.slice(Math.max(0, text.length-5))),
 			`${m.id}: ${m.text}`	
@@ -63,7 +63,7 @@ function App() {
 		}
 	}
 
-	const mySend = (txt)=> {
+	const mySend = (txt: any)=> {
 		txt= typeof(txt)=='string' ? txt.trim() : `from ${myId} ${(new Date()).toString()}`
 		peerId.split(',').forEach(peerId => (callMgr.peers[peerId]=true));
 		callMgr.sendToAll({t:'text', text: txt });
@@ -79,7 +79,7 @@ function App() {
 		setError('');
 	}
 
-	const micToggleDetector = (e)=>  {
+	const micToggleDetector = ()=>  {
 		if (! micOn ) {
 			setMicWantsDetector( ! micWantsDetector );
 		}
