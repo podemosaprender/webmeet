@@ -2,7 +2,6 @@
 * SEE: https://github.com/peers/peerjs#setup
 */
 import { Peer } from 'peerjs';
-import { playAudioChunks } from '../io/audio/util';
 
 let _myCx : Peer;
 /**
@@ -10,12 +9,11 @@ let _myCx : Peer;
  */
 let _peerCx: Record<string,any>= {}
 
-let emuChunks= new Array(); //XXX: must be per peer
 
 /** accept connections with myId
 * @param myId: string with the nick/id other users recognize
 */
-export function open(myId: string) {
+export function open(myId: string, onData: (data: any) => void) {
 	_myCx= new Peer(myId, {
 		//XXX: host: location.host, //U: puede ser otro ej 'call-s.podemosaprender.org',
 		host: 'call-s.podemosaprender.org',
@@ -26,20 +24,23 @@ export function open(myId: string) {
 	console.log("PEER MY CX START");
 	_myCx.on('open', function(id) {
 		console.log('My peer ID is: ' + id);
-  });
-	_myCx.on("connection", (conn) => { //XXX:EMU
-		console.log("PEER ON CX");
-		conn.on("data", (data: any) => { 
-			console.log("PEER DATA",data); 
-			if (data.t=='audio-chunk') {
-				emuChunks.push(data.blob);
-				//XXX: se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
-			} else if (data.t=='audio-end') {
-				playAudioChunks( emuChunks );
-				emuChunks= new Array();
-			}
+		onData({t: 'open', id});
+	});
+
+	_myCx.on("connection", (cx) => { 
+		console.log("PEER ON CX", cx);
+
+		cx.on("open", () => {
+			_peerCx[ cx.peer ]= cx;
+			cx.send({t: 'hello', from: myId});
+			onData({t: 'peer', id: cx.peer});
 		});
-		conn.on("open", () => void(conn.send(`hello from ${myId}!`)));
+
+		cx.on("data", (data: any) => { 
+			console.log("PEER DATA",data); 
+			onData(data);
+		});
+
 	});
 }
 
@@ -47,23 +48,29 @@ export function open(myId: string) {
 * @param data: any serializable type
 * @param dstId: string with the nick/id other users recognize
 */
-export function send(data: any, dstId: string) {
-	const doSend= async (conn: any) => {
+export async function send(data: any, dstId: string, onData: (data: any) => void) {
+	const doSend= async (cx: any) => {
 		console.log("PEER THEIR CX OK");
-		try { await conn.send(data); }
+		try { await cx.send(data); }
 		catch (ex) { console.log("PEER SEND ERROR",ex) }
 	}
 
-	let conn = _peerCx[dstId];
-	if (conn) {
-		doSend(conn);
+	let cx = _peerCx[dstId];
+	let r: any;
+	if (cx) {
+		r= await doSend(cx);
 	} else {
-		conn= _myCx.connect(dstId);
+		cx= _myCx.connect(dstId);
 		console.log("PEER THEIR CX START");
-		conn.on("open", async (): Promise<void> => {
-			_peerCx[dstId]= conn;
-			await doSend(conn) 
+		cx.on("open", async (): Promise<void> => {
+			_peerCx[dstId]= cx;
+			r= await doSend(cx) 
 		}); //XXX: handle errors and timeouts
+		cx.on("data", (data: any) => { 
+			console.log("PEER DATA",data); 
+			onData(data);
+		});
 	}
+	return r;
 }
 

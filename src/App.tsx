@@ -1,6 +1,6 @@
 import {callMgr} from './services/call'
 
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 import { PrimeReactProvider } from 'primereact/api';
 
@@ -9,11 +9,11 @@ import 'primeicons/primeicons.css'; //SEE: https://primereact.org/icons/#list
 
 import 'primereact/resources/themes/lara-dark-purple/theme.css'
 //OPT: import "primereact/resources/themes/lara-light-cyan/theme.css";
-
-
-//SEE: https://primereact.org/configuration/
 import './App.css'
 
+//SEE: https://primereact.org/configuration/
+
+import { Helmet } from 'react-helmet';
 import { MyInput } from './components/prototyping';
 import { Button } from 'primereact/button';
 import { Message } from 'primereact/message';
@@ -22,10 +22,26 @@ function App() {
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
 	const [micOn, setMicOn] = useState(false);
+	const [micAudioOn, setMicAudioOn] = useState(false);
+	const [isOpen, setIsOpen] = useState(false);
+	const [text, setText] = useState('');
+
+	const onUpdate= useCallback( (e: Event) => {
+		setIsOpen(callMgr.isOpen);	
+		setPeerId(Object.keys(callMgr.peers).join(','));
+		if (e.type=='silence') { setMicAudioOn(false) }
+		else if (e.type=='sound') { setMicAudioOn(true) }
+		else if (e.type=='text') { setText((e as CustomEvent).detail) }
+	}, [setMicAudioOn, setIsOpen, setPeerId, setText]);
+
+	useEffect( () => {
+		callMgr.events.forEach(n => callMgr.addEventListener(n, onUpdate));
+		return () => { callMgr.events.forEach(n => callMgr.removeEventListener(n,onUpdate)); }
+	});
 
 	const mySend = ()=> {
 		peerId.split(',').forEach(peerId => (callMgr.peers[peerId]=true));
-		callMgr.sendToAll(`from ${myId} ${(new Date()).toString()}`);
+		callMgr.sendToAll({t:'text', text: `from ${myId} ${(new Date()).toString()}`});
 	}
 
 	const micToggle = ()=>  {
@@ -38,6 +54,9 @@ function App() {
 
 	return (
 		<PrimeReactProvider>
+			<Helmet>
+				<title>WebMeet</title>
+			</Helmet>
 			<p><small>WebMeet</small></p>
 			{ isLocalhost 
 				? <Message severity="error" text="WARNING: does NOT work if the page is loaded from localhost, use your LAN IP" />
@@ -47,7 +66,7 @@ function App() {
 			<div className="card flex flex-column md:flex-row gap-3">
 				<div className="p-inputgroup flex-1">
 					<MyInput id="MyId" value={myId} setValue={setMyId} />
-					<Button icon="pi pi-user" onClick={() => callMgr.connectAs(myId)} />
+					<Button icon="pi pi-user" onClick={() => callMgr.connectAs(myId)} outlined={ isOpen }/>
 				</div>
 
 				<div className="p-inputgroup flex-1">
@@ -56,9 +75,16 @@ function App() {
 				</div>
 
 				<div className="p-inputgroup flex-1">
-					<Button icon="pi pi-microphone" onClick={micToggle} outlined={! micOn}/>
+					<Button icon="pi pi-microphone" 
+						onClick={micToggle} 
+						outlined={! micOn} 
+						badge={ micAudioOn ? '*' : '.' }
+					/>
 				</div>
 
+			</div>
+			<div className="card">
+				{text}
 			</div>
 		</PrimeReactProvider>
 	)
