@@ -127,7 +127,7 @@ class AudioEmitter extends EventTarget {
 	}
 	_onData= (e: Event) => {
 		if (this._silenceDetector?.isSilent === false) { //A: only if value is set
-			console.log("MIC DATA",e);
+			//DBG: console.log("MIC DATA",e);
 			this.dispatchEvent(new CustomEvent('data',{detail: (e as CustomEvent).detail}));
 		}
 	}
@@ -135,7 +135,7 @@ class AudioEmitter extends EventTarget {
 	async start() {
 		const stream= await getMediaStreams(false)
 		this._recorder= new ChunkMediaRecorder(stream);
-		this._silenceDetector= new SilenceDetector(stream, 500); //XXX:CFG
+		this._silenceDetector= new SilenceDetector(stream,100); //XXX:CFG
 
 		this._silenceDetector.addEventListener('sound', this._onSound)
 		this._silenceDetector.addEventListener('silence', this._onSilence)

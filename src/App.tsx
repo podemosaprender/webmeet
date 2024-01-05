@@ -80,6 +80,9 @@ function App() {
 						outlined={! micOn} 
 						badge={ micAudioOn ? '*' : '.' }
 					/>
+					<Button icon="pi pi-sort-alt" 
+						onClick={() => callMgr.ping(Object.keys(callMgr.peers)[0])} 
+					/>
 				</div>
 
 			</div>

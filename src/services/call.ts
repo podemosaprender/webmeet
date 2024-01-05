@@ -20,7 +20,7 @@ class CallMgr extends EventTarget {
 			emuChunks.push(data.blob);
 			//XXX: se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
 		} else if (data.t=='audio-end') {
-			playAudioChunks( emuChunks );
+			playAudioChunks( emuChunks ); //XXX:don't start before previous finishes, use a queue!
 			emuChunks= new Array();
 		} else if (data.t=='open') {
 			this._isOpen= true;
@@ -30,6 +30,10 @@ class CallMgr extends EventTarget {
 			this.dispatchEvent(new Event('peer'));
 		} else if (data.t=='text') {
 			this.dispatchEvent(new CustomEvent('text', {detail: data.text}));
+		} else if (data.t=='ping') {
+			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.id);
+		} else if (data.t=='pong') {
+			console.log('CALL pong', data.id, Date.now() - data.ping_t)	
 		} else {
 			console.log("CALL data", data);
 		}
@@ -58,6 +62,10 @@ class CallMgr extends EventTarget {
 
 	sendToAll(data: any) {
 		Object.keys(this.peers).forEach( peerId => this.sendTo(data, peerId) );
+	}
+
+	ping(peerId: string) {
+		this.sendTo({t:'ping', ping_t: Date.now()}, peerId);
 	}
 
 	async audioOn() {
