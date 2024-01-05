@@ -1,5 +1,7 @@
 /** INFO: WebRTC peerjs transport
 * SEE: https://github.com/peers/peerjs#setup
+* SEE: https://peerjs.com/docs/#peeron
+* SEE: https://peerjs.com/docs/#dataconnection-on
 */
 import { Peer } from 'peerjs';
 
@@ -26,7 +28,9 @@ export function open(myId: string, onData: (data: any) => void) {
 		console.log('My peer ID is: ' + id);
 		onData({t: 'open', id});
 	});
-
+	_myCx.on('error', (err) => {
+		onData({t: 'error', id: myId, err} ) 
+	})
 	_myCx.on("connection", (cx) => { 
 		console.log("PEER ON CX", cx);
 
@@ -35,12 +39,16 @@ export function open(myId: string, onData: (data: any) => void) {
 			cx.send({t: 'hello', from: myId});
 			onData({t: 'peer', id: cx.peer});
 		});
-
 		cx.on("data", (data: any) => { 
 			console.log("PEER DATA",data); 
 			onData(data);
 		});
-
+		cx.on('error', (err: any) => {
+			onData({t: 'error', id: cx.peer, err} ) 
+		})
+		cx.on('close', () => {
+			onData({t: 'error', id: cx.peer, err: 'close'} ) 
+		});
 	});
 }
 
@@ -56,21 +64,26 @@ export async function send(data: any, dstId: string, onData: (data: any) => void
 	}
 
 	let cx = _peerCx[dstId];
-	let r: any;
 	if (cx) {
-		r= await doSend(cx);
+		await doSend(cx);
 	} else {
-		cx= _myCx.connect(dstId);
+		cx= _myCx.connect(dstId);//XXX: handle errors and timeouts
 		console.log("PEER THEIR CX START");
 		cx.on("open", async (): Promise<void> => {
 			_peerCx[dstId]= cx;
-			r= await doSend(cx) 
-		}); //XXX: handle errors and timeouts
+			await doSend(cx) 
+		}); 
 		cx.on("data", (data: any) => { 
+			data.id= cx.peer;
 			console.log("PEER DATA",data); 
 			onData(data);
 		});
+		cx.on('error', (err: any) => {
+			onData({t: 'error', id: cx.peer, err} ) 
+		});
+		cx.on('close', () => {
+			onData({t: 'error', id: cx.peer, err: 'close'} ) 
+		});
 	}
-	return r;
 }
 
