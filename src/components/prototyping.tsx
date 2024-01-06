@@ -12,7 +12,7 @@ export function MyInput({id, value, setValue}: MyInputProps) {
 			<InputText 
 				id={id} value={value} 
 				onChange={(e) => setValue(String(e.target.value))}
-				onInput={(e) => console.log(e)} //XXX: catch enter!
+				//onInput={(e) => console.log(e)} //XXX: catch enter!
 			/>
 			<label htmlFor={id}>{id}</label>
 		</span>
