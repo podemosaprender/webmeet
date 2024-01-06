@@ -88,7 +88,7 @@ class CallMgr extends EventTarget {
 		let dataToSend: any;
 		data = data || {t:'text', text: `from ${this._myId} ${(new Date()).toString()}`};
 
-		if (nextPeerIndex < route.length-1) {
+		if (nextPeerIndex < packetRoute.length-1) {
 			dataToSend = {t:'forward', d:data, r:packetRoute, ri:nextPeerIndex};
 		} else {
 			dataToSend = {...data, r:packetRoute, ri:nextPeerIndex};
