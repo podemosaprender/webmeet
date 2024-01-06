@@ -41,7 +41,8 @@ function App() {
 
 	const onUpdate= useCallback( (e: Event) => {
 		setIsOpen(callMgr.isOpen);	
-		setPeerId(Object.keys(callMgr.peers).join(','));
+
+		setPeerId(callMgr.routes.map(route => route.join('>')).join(','));
 		if (e.type=='silence') { setMicAudioOn(false) }
 		else if (e.type=='sound') { setMicAudioOn(true) }
 		else if (e.type=='text') { addText( (e as CustomEvent).detail ); }
@@ -65,7 +66,10 @@ function App() {
 
 	const mySend = (txt: any)=> {
 		txt= typeof(txt)=='string' ? txt.trim() : `from ${myId} ${(new Date()).toString()}`
-		peerId.split(',').forEach(peerId => (callMgr.peers[peerId]=true));
+		callMgr.routes = [];
+		peerId.trim().split(',').forEach(pids => {
+			callMgr.routes.push(pids.trim().split('>').map(x => x.trim()));
+		});
 		callMgr.sendToAll({t:'text', text: txt });
 		addText({id: myId, text: msg});
 		setError('');
@@ -122,7 +126,7 @@ function App() {
 						outlined={! setMicWantsDetector }
 					/>
 					<Button icon="pi pi-sort-alt" 
-						onClick={() => callMgr.ping(Object.keys(callMgr.peers)[0])} 
+						onClick={() => callMgr.pingAll()} 
 					/>
 				</div>
 

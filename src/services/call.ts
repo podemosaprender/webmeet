@@ -27,7 +27,7 @@ async function processAudioChunks(chunks: any[]) {
 class CallMgr extends EventTarget {
 	_myId= '';
 	peers: Record<string,any> = {}; //XXX: para tener lista de ids, usar setters, getters, etc.
-
+	routes: Array<string>[] = []; 
 	_isOpen= false;
 	get isOpen() { return this._isOpen }
 	get events() { return ['error','open','sound','silence','peer','text']}
@@ -43,20 +43,24 @@ class CallMgr extends EventTarget {
 			this._isOpen= true;
 			this.dispatchEvent(new Event('open'));
 		} else if (data.t=='peer') {
-			this.peers[data.id]= true;
+			//this.peers[data.r[0]]= true;
 			this.dispatchEvent(new Event('peer'));
 		} else if (data.t=='error') {
-			this.peers[data.id]= false;
+			//this.peers[data.r[0]]= false;
 			this.dispatchEvent(new Event('peer'));
-			this.dispatchEvent(new CustomEvent('error',{detail:{msg: String(data.err), id: data.id}}) );
+			this.dispatchEvent(new CustomEvent('error',{detail:{msg: String(data.err), id: data.r[0]}}) );
 		} else if (data.t=='text') {
-			this.dispatchEvent(new CustomEvent('text', {detail: {text: data.text, id: data.id}}));
+			this.dispatchEvent(new CustomEvent('text', {detail: {text: data.text, id: data.r[0]}}));
 		} else if (data.t=='ping') {
-			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.id);
+			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.r.toReversed().slice(1, data.r.length));
 		} else if (data.t=='pong') {
 			let dt= Date.now() - data.ping_t
-			console.log('CALL pong', data.id,dt)	 
-			this.dispatchEvent(new CustomEvent('text', {detail: {text: `PONG ${dt}`, id: data.id}}));
+			console.log('CALL pong', data.r[0],dt)	 
+			this.dispatchEvent(new CustomEvent('text', {detail: {text: `PONG ${dt}`, id: data.r[0]}}));
+		} else if (data.t =='forward') {
+			this.sendTo(data.d, data.r, data.ri);
+			console.log("forwarding message", data);
+			//this._onTransportData(data.d);
 		} else {
 			console.log("CALL data", data);
 		}
@@ -78,18 +82,35 @@ class CallMgr extends EventTarget {
 		this._myId= myId;
 	}
 
-	sendTo(data: any, peerId: string) {
-		data= data || {t:'text', text: `from ${this._myId} ${(new Date()).toString()}`};
-		Peer.send(data, peerId, this._onTransportData);
+	sendTo(data: any, route: string[], currentPeerIndex: number = 0) {
+		let packetRoute = (currentPeerIndex == 0) ? [this._myId, ...route] : route;
+		let nextPeerIndex = currentPeerIndex+1;
+		let dataToSend: any;
+		data = data || {t:'text', text: `from ${this._myId} ${(new Date()).toString()}`};
+
+		if (nextPeerIndex < route.length-1) {
+			dataToSend = {t:'forward', d:data, r:packetRoute, ri:nextPeerIndex};
+		} else {
+			dataToSend = {...data, r:packetRoute, ri:nextPeerIndex};
+		}
+
+		console.log("Sending with route ", dataToSend);
+
+		Peer.send(dataToSend, packetRoute[nextPeerIndex], this._onTransportData);
 	}
 
 	sendToAll(data: any) {
-		Object.keys(this.peers).forEach( peerId => this.sendTo(data, peerId) );
+		this.routes.forEach( route => this.sendTo(data, route) );
+	}
+
+	pingAll() {
+		this.routes.forEach( route => this.sendTo({t:'ping', ping_t: Date.now()}, route));
 	}
 
 	ping(peerId: string) {
-		this.sendTo({t:'ping', ping_t: Date.now()}, peerId);
+		this.sendTo({t:'ping', ping_t: Date.now()}, [peerId]);
 	}
+
 
 	async audioOn(wantsSilenceDetector=true) {
 		IOAudio.getMicAudioEmitter().addEventListener('data',this._onAudioData);

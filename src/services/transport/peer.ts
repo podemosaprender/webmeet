@@ -30,6 +30,7 @@ export function open(myId: string, onData: (data: any) => void) {
 	});
 	_myCx.on('error', (err) => {
 		onData({t: 'error', id: myId, err} ) 
+		//A: Can't connect to peer is reported here.
 	})
 	_myCx.on("connection", (cx) => { 
 		console.log("PEER ON CX", cx);
@@ -63,7 +64,9 @@ export async function send(data: any, dstId: string, onData: (data: any) => void
 		catch (ex) { console.log("PEER SEND ERROR",ex) }
 	}
 
+	//XXX: Check if connected, handle error, retry.
 	let cx = _peerCx[dstId];
+	console.log("Peer send cx", cx);
 	if (cx) {
 		await doSend(cx);
 	} else {
@@ -80,10 +83,12 @@ export async function send(data: any, dstId: string, onData: (data: any) => void
 		});
 		cx.on('error', (err: any) => {
 			delete _peerCx[cx.peer];
+			console.log("PEER ERROR");
 			onData({t: 'error', id: cx.peer, err} ) 
 		});
 		cx.on('close', () => {
 			delete _peerCx[cx.peer];
+			console.log("PEER CLOSE");
 			onData({t: 'error', id: cx.peer, err: 'close'} ) 
 		});
 	}
