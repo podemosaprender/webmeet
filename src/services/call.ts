@@ -28,14 +28,15 @@ class CallMgr extends EventTarget {
 	_myId= '';
 	peers: Record<string,any> = {}; //XXX: para tener lista de ids, usar setters, getters, etc.
 	routes: Array<string>[] = []; 
+
 	_isOpen= false;
 	get isOpen() { return this._isOpen }
 	get events() { return ['error','open','sound','silence','peer','text']}
 
 	_onTransportData= (data: any) => { //U: standard event handler for all transports
-		if (data.t=='audio-chunk') {
+		if (data.t=='audio-chunk') { //XXX:make extensible/composable with a kv data.t => handler?
 			emuChunks.push(data.blob);
-			//XXX: se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
+			//XXX: @Maxi se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
 		} else if (data.t=='audio-end') {
 			processAudioChunks( emuChunks ); //A: don't start before previous finishes, use a queue!
 			emuChunks= new Array();
@@ -43,12 +44,10 @@ class CallMgr extends EventTarget {
 			this._isOpen= true;
 			this.dispatchEvent(new Event('open'));
 		} else if (data.t=='peer') {
-			//this.peers[data.r[0]]= true;
 			this.dispatchEvent(new Event('peer'));
 		} else if (data.t=='error') {
-			//this.peers[data.r[0]]= false;
 			this.dispatchEvent(new Event('peer'));
-			this.dispatchEvent(new CustomEvent('error',{detail:{msg: String(data.err), id: data.r[0]}}) );
+			this.dispatchEvent(new CustomEvent('error',{detail:{msg: String(data.err), id: (data.r||[])[0]}}) );
 		} else if (data.t=='text') {
 			this.dispatchEvent(new CustomEvent('text', {detail: {text: data.text, id: data.r[0]}}));
 		} else if (data.t=='ping') {
@@ -60,7 +59,7 @@ class CallMgr extends EventTarget {
 		} else if (data.t =='forward') {
 			this.sendTo(data.d, data.r, data.ri);
 			console.log("forwarding message", data);
-			//this._onTransportData(data.d);
+			//this._onTransportData(data.d); //XXX:@Maxi why?
 		} else {
 			console.log("CALL data", data);
 		}
