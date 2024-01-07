@@ -13,8 +13,10 @@ import './App.css'
 
 //SEE: https://primereact.org/configuration/
 
-import { Helmet } from 'react-helmet';
 import { MyInput } from './components/prototyping';
+import { MyFileUpload } from './components/file-upload';
+
+import { Helmet } from 'react-helmet';
 import { Button } from 'primereact/button';
 import { Message } from 'primereact/message';
 
@@ -138,6 +140,8 @@ function App() {
 					<Button icon="pi pi-caret-right" onClick={() => mySend(msg)} />
 				</div>
 			</div>
+
+			<MyFileUpload /> 
 
 			<div className="card">
 				{ error!=''
