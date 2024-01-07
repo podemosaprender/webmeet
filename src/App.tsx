@@ -13,14 +13,20 @@ import './App.css'
 
 //SEE: https://primereact.org/configuration/
 
-import { MyInput } from './components/prototyping';
-import { MyFileUpload } from './components/file-upload';
+import { BottomControls } from './components/bottom-controls';
+
+import { SettingsView } from './pages/settings-view';
+import { RoomView } from './pages/room-view';
+import { AssetsView } from './pages/assets-view';
 
 import { Helmet } from 'react-helmet';
-import { Button } from 'primereact/button';
 import { Message } from 'primereact/message';
 
+//XXX: for mic control position SEE: https://primereact.org/dock/
+
 function App() {
+	const [view, setView]= useState('settings');
+
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
 	const [error, setError] = useState('');
@@ -33,22 +39,77 @@ function App() {
 	const [text, setText] = useState(new Array());
 	const [msg, setMsg] = useState('');
 
-	const addText= (m: any) => {
-		let t2= [
-			...(text.slice(Math.max(0, text.length-5))),
-			`${m.id}: ${m.text}`	
-		]
-		setText(t2)	
+	//XXX: is this the best way to share props with views? use a context although it overlaps with CallMgr?
+	const WebMeetProps= {
+		myId, setMyId,
+		peerId, setPeerId,
+		error, setError,
+
+		micOn, setMicOn,
+		micAudioOn, setMicAudioOn,
+		micWantsDetector, setMicWantsDetector,
+
+		isOpen, setIsOpen,
+		text, setText,
+		msg, setMsg,
+
+		addText: (m: any) => {
+			let t2= [
+				...(text.slice(Math.max(0, text.length-500))),
+				`${m.id}: ${m.text}`	
+			]
+			setText(t2)	
+		},
+
+		myConnect:  () => {
+			let v= myId.trim(); setMyId(v);
+			if (v!='') {
+				callMgr.connectAs(v);
+				setError('');
+			} else {
+				setError('Please write your id');
+			}
+		},
+
+		mySend:  (txt: any)=> {
+			txt= typeof(txt)=='string' ? txt.trim() : `from ${myId} ${(new Date()).toString()}`
+			callMgr.routes = [];
+			peerId.trim().split(',').forEach(pids => {
+				callMgr.routes.push(pids.trim().split('>').map(x => x.trim()));
+			});
+			callMgr.sendToAll({t:'text', text: txt });
+			WebMeetProps.addText({id: myId, text: msg});
+			setError('');
+			setMsg('');
+		},
+
+		micToggle:  ()=>  {
+			const newStatus= ! micOn;
+			setMicOn( newStatus ); 
+			if (newStatus) callMgr.audioOn(micWantsDetector); else callMgr.audioOff();
+			setError('');
+		},
+
+		micToggleDetector:  ()=>  {
+			if (! micOn ) {
+				setMicWantsDetector( ! micWantsDetector );
+			}
+			setError('');
+		},
+
+		ping:  () => callMgr.pingAll(),
+
+		isLocalhost:  window.location.href.match(/(localhost)|(127\.0\.0\.1)/)!=null,
 	}
 
 	const onUpdate= useCallback( (e: Event) => {
-		setIsOpen(callMgr.isOpen);	
+		WebMeetProps.setIsOpen(callMgr.isOpen);	
 
-		setPeerId(callMgr.routes.map(route => route.join('>')).join(','));
-		if (e.type=='silence') { setMicAudioOn(false) }
-		else if (e.type=='sound') { setMicAudioOn(true) }
-		else if (e.type=='text') { addText( (e as CustomEvent).detail ); }
-		else if (e.type=='error') { const d=(e as CustomEvent).detail; setError(`${d.id}: ${d.msg}`) }
+		WebMeetProps.setPeerId(callMgr.routes.map(route => route.join('>')).join(','));
+		if (e.type=='silence') { WebMeetProps.setMicAudioOn(false) }
+		else if (e.type=='sound') { WebMeetProps.setMicAudioOn(true) }
+		else if (e.type=='text') { WebMeetProps.addText( (e as CustomEvent).detail ); }
+		else if (e.type=='error') { const d=(e as CustomEvent).detail; WebMeetProps.setError(`${d.id}: ${d.msg}`) }
 	}, [setMicAudioOn, setIsOpen, setPeerId, setText, text]);
 
 	useEffect( () => {
@@ -56,101 +117,35 @@ function App() {
 		return () => { callMgr.events.forEach(n => callMgr.removeEventListener(n,onUpdate)); }
 	});
 
-	const myConnect = () => {
-		let v= myId.trim(); setMyId(v);
-		if (v!='') {
-			callMgr.connectAs(v);
-			setError('');
-		} else {
-			setError('Please write your id');
-		}
-	}
-
-	const mySend = (txt: any)=> {
-		txt= typeof(txt)=='string' ? txt.trim() : `from ${myId} ${(new Date()).toString()}`
-		callMgr.routes = [];
-		peerId.trim().split(',').forEach(pids => {
-			callMgr.routes.push(pids.trim().split('>').map(x => x.trim()));
-		});
-		callMgr.sendToAll({t:'text', text: txt });
-		addText({id: myId, text: msg});
-		setError('');
-		setMsg('');
-	}
-
-	const micToggle = ()=>  {
-		const newStatus= ! micOn;
-		setMicOn( newStatus ); 
-		if (newStatus) callMgr.audioOn(micWantsDetector); else callMgr.audioOff();
-		setError('');
-	}
-
-	const micToggleDetector = ()=>  {
-		if (! micOn ) {
-			setMicWantsDetector( ! micWantsDetector );
-		}
-		setError('');
-	}
-
-	const isLocalhost= window.location.href.match(/(localhost)|(127\.0\.0\.1)/)!=null;
-
 	return (
 		<PrimeReactProvider>
 			<Helmet>
 				<title>WebMeet</title>
 			</Helmet>
-			<p><small>WebMeet</small></p>
-			{ isLocalhost 
-				? <Message severity="error" text="WARNING: does NOT work if the page is loaded from localhost, use your LAN IP" />
-				: null
-			}
+			<div className="dock-window">
+				<BottomControls onCommand={ (aview) => setView(aview) }/>
 
-			<div className="card flex flex-column md:flex-row gap-3">
-				<div className="p-inputgroup flex-1">
-					<MyInput id="MyId" value={myId} setValue={setMyId} />
-					<Button icon="pi pi-user" onClick={myConnect} outlined={ isOpen }/>
-				</div>
+				<p><small>WebMeet {view} as {myId}</small></p>
 
-				<div className="p-inputgroup flex-1">
-					<MyInput id="PeerIds" value={peerId} setValue={setPeerId} />
-					<Button icon="pi pi-users" onClick={mySend} />
-				</div>
-
-				<div className="p-inputgroup flex-1">
-					<Button icon="pi pi-microphone" 
-						onClick={micToggle} 
-						outlined={! micOn} 
-						badge={ micAudioOn ? '*' : '.' }
-					/>
-					<Button 
-						onClick={micToggleDetector} 
-						label={micWantsDetector ? "auto" : "ptt"}
-						outlined={! setMicWantsDetector }
-					/>
-					<Button icon="pi pi-sort-alt" 
-						onClick={() => callMgr.pingAll()} 
-					/>
-				</div>
-
-			</div>
-
-			<div className="card flex flex-column md:flex-row gap-3">
-				<div className="p-inputgroup flex-1">
-					<MyInput id="msg" value={msg} setValue={setMsg}/>
-					<Button icon="pi pi-caret-right" onClick={() => mySend(msg)} />
-				</div>
-			</div>
-
-			<MyFileUpload /> 
-
-			<div className="card">
-				{ error!=''
-					? <Message severity="error" text={error} />
+				{ WebMeetProps.isLocalhost 
+					? <Message severity="error" text="WARNING: does NOT work if the page is loaded from localhost, use your LAN IP" />
 					: null
 				}
-			</div>
-			<div className="card">
-				{text.map((t,i) => <p key={i}>{t}</p>)}
+
+				<div className="card">
+					{ WebMeetProps.error!=''
+						? <Message severity="error" text={WebMeetProps.error} />
+						: null
+					}
+				</div>
+
+				{ 
+					view=='settings' ? <SettingsView {...WebMeetProps} /> :
+					view=='room' ? <RoomView {...WebMeetProps} /> :
+					view=='files' ? <AssetsView {...WebMeetProps} /> :
+					<p>Unknown view {view}</p>
+				}
+
 			</div>
 		</PrimeReactProvider>
 	)
