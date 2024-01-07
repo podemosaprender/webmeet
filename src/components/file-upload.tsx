@@ -5,9 +5,16 @@ import { useState, useRef } from 'react';
 import { FileUpload, FileUploadHandlerEvent } from 'primereact/fileupload';
 import { Image } from 'primereact/image';
 
+interface UploadedItem {
+	name: string,
+	type: string,
+	url: string,
+	blob?: Blob,
+}
+
 export function MyFileUpload() {
-	const fileUploadCtl= useRef(null);
-	const [uploadedItems, setUploadedItems]= useState(new Array<Blob>());
+	const fileUploadCtl= useRef<FileUpload>(null);
+	const [uploadedItems, setUploadedItems]= useState(new Array<UploadedItem>());
 
 	const customUploader = (event: FileUploadHandlerEvent) => {
 		setUploadedItems([
@@ -32,14 +39,14 @@ export function MyFileUpload() {
 			<ul>{ uploadedItems.map( (item,idx) => (
 				<li key={idx}>{item.name}<br />{
 					item.type.startsWith('image/') ? (
-						<Image src={item.url || URL.createObjectURL(item.blob)} width="250" preview/> 
+						<Image src={item.url || (item.blob ? URL.createObjectURL(item.blob) : '')} width="250" preview/> 
 					) :
 					item.type.startsWith('audio') ? (
-						<audio controls="controls"> 
-							<source src={item.url || URL.createObjectURL(item.blob)} type="audio/mp3" />
+						<audio controls> 
+							<source src={item.url || (item.blob ? URL.createObjectURL(item.blob): '')} type="audio/mp3" />
 						</audio>
 					) :
-					`??? ${item.blob.type}`
+					`??? ${item.type}`
 				}</li>
 			)) }
 			</ul>

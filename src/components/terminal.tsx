@@ -8,10 +8,10 @@ import { Terminal } from 'primereact/terminal';
 import { TerminalService } from 'primereact/terminalservice';
 
 export function WebMeetTerminal() {
-	const commandHandler = (text) => {
+	const commandHandler = (text: string) => {
 		let response;
-		let argsIndex = text.indexOf(' ');
-		let command = argsIndex !== -1 ? text.substring(0, argsIndex) : text;
+		const argsIndex = text.indexOf(' ');
+		const command = argsIndex !== -1 ? text.substring(0, argsIndex) : text;
 
 		switch (command) {
 			case 'date':
@@ -55,14 +55,6 @@ export function WebMeetTerminal() {
 				Enter "<strong>date</strong>" to display the current date, "<strong>greet {'{0}'}</strong>" for a message, "<strong>random</strong>" to get a random number and "<strong>clear</strong>" to clear all commands.
 			</p>
 			<Terminal
-				welcomeMessage="Welcome to WebMeet"
-				prompt="webmeet $"
-				pt={{
-					root: 'bg-gray-900 text-white border-round',
-					prompt: 'text-gray-400 mr-2',
-					command: 'text-primary-300',
-					response: 'text-primary-300'
-				}}
 			/>
 		</div>
 	);

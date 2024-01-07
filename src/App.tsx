@@ -36,7 +36,7 @@ function App() {
 	const [micWantsDetector, setMicWantsDetector] = useState(false);
 
 	const [isOpen, setIsOpen] = useState(false);
-	const [text, setText] = useState(new Array());
+	const [text, setText] = useState<string[]>(new Array());
 	const [msg, setMsg] = useState('');
 
 	//XXX: is this the best way to share props with views? use a context although it overlaps with CallMgr?
@@ -54,7 +54,7 @@ function App() {
 		msg, setMsg,
 
 		addText: (m: any) => {
-			let t2= [
+			const t2= [
 				...(text.slice(Math.max(0, text.length-500))),
 				`${m.id}: ${m.text}`	
 			]
@@ -62,7 +62,7 @@ function App() {
 		},
 
 		myConnect:  () => {
-			let v= myId.trim(); setMyId(v);
+			const v= myId.trim(); setMyId(v);
 			if (v!='') {
 				callMgr.connectAs(v);
 				setError('');
@@ -142,7 +142,7 @@ function App() {
 				{ 
 					view=='settings' ? <SettingsView {...WebMeetProps} /> :
 					view=='room' ? <RoomView {...WebMeetProps} /> :
-					view=='files' ? <AssetsView {...WebMeetProps} /> :
+					view=='files' ? <AssetsView /> :
 					<p>Unknown view {view}</p>
 				}
 

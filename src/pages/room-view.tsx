@@ -14,9 +14,10 @@ interface RoomViewProps {
 	micOn: boolean,
 	micAudioOn: boolean,
 	micWantsDetector: boolean, setMicWantsDetector: (v: boolean) => void,
-	mySend: () => void,
+	mySend: (txt: any) => void,
 	ping: () => void,
-	msg: any[], setMsg: (v: any[]) => void,
+	msg: string, setMsg: (v: string) => void,
+	text: string[], setText: (t: string[]) => void,
 }
 
 function ChatScroller({text}: {text: string[]}) {
@@ -31,9 +32,8 @@ function ChatScroller({text}: {text: string[]}) {
 	};
 
 	useEffect(() => { 
-		window.xf= scrollerRef.current;
 		setTimeout( () => { //A: after the list was redrawn //XXX: don't scroll if the user scrolled manually
-			xf.scrollTo({top: 99999999}) //XXX: why the other methods fail?
+			scrollerRef.current?.scrollTo({top: 99999999, left: 0, behavior: 'smooth'}) //XXX: why the other methods fail?
 		},100 );
 	},[text]);
 
@@ -43,7 +43,7 @@ function ChatScroller({text}: {text: string[]}) {
 				items={text} 
 				itemTemplate={itemTemplate} 
 				inline 
-				itemSize="50"
+				itemSize={50}
 				scrollHeight="300px" 
 			/>
 		</div>
