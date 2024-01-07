@@ -2,6 +2,8 @@
 
 videocall / videoconference / screen sharing / voice chat
 
+try the last build at https://viejo.podemosaprender.org/webmeet/
+
 ## Design Goals
 
 * Usable even with breaking and very low bandwidth internet connections
