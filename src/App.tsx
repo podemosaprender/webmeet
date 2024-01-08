@@ -25,7 +25,7 @@ import { Message } from 'primereact/message';
 //XXX: for mic control position SEE: https://primereact.org/dock/
 
 function App() {
-	const [view, setView]= useState('settings');
+	const [view, setView]= useState('');
 
 	const [myId, setMyId] = useState('');
 	const [peerId, setPeerId] = useState('');
@@ -117,13 +117,28 @@ function App() {
 		return () => { callMgr.events.forEach(n => callMgr.removeEventListener(n,onUpdate)); }
 	});
 
+	useEffect( () => {
+		if (view=='' && callMgr.isOpen) { //A: after first login
+			setView('room');
+		}
+	}, [myId, callMgr.isOpen]);
+
+	const onCommand= (cmd: string) => {
+		if (cmd=='mic') { WebMeetProps.micToggle() }
+		else { setView(cmd) }
+	}
+
 	return (
 		<PrimeReactProvider>
 			<Helmet>
 				<title>WebMeet</title>
 			</Helmet>
 			<div className="dock-window">
-				<BottomControls onCommand={ (aview) => setView(aview) }/>
+				<BottomControls 
+					onCommand={ onCommand } 
+					callAudioEnabled={ callMgr.isOpen }
+					callAudioRecording={ WebMeetProps.micOn }
+				/>
 
 				<p><small>WebMeet {view} as {myId}</small></p>
 
@@ -140,7 +155,7 @@ function App() {
 				</div>
 
 				{ 
-					view=='settings' ? <SettingsView {...WebMeetProps} /> :
+					!callMgr.isOpen || view=='' || myId=='' || view=='settings' ? <SettingsView {...WebMeetProps} /> :
 					view=='room' ? <RoomView {...WebMeetProps} /> :
 					view=='files' ? <AssetsView /> :
 					<p>Unknown view {view}</p>

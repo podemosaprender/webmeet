@@ -55,6 +55,14 @@ export function WebMeetTerminal() {
 				Enter "<strong>date</strong>" to display the current date, "<strong>greet {'{0}'}</strong>" for a message, "<strong>random</strong>" to get a random number and "<strong>clear</strong>" to clear all commands.
 			</p>
 			<Terminal
+				welcomeMessage="WebMeet super powers!"
+				prompt=">"
+				pt={{
+					root: {class: 'h-11rem bg-gray-900 text-white border-2 border-round border-900'},
+					prompt: {class: 'text-gray-400 mr-2'},
+					command: {class: 'text-primary-300'},
+					response: {class: 'text-primary-300'}
+				}}
 			/>
 		</div>
 	);

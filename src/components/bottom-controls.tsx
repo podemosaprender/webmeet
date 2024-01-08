@@ -6,28 +6,39 @@ import { Dock } from 'primereact/dock';
 import { MenuItem } from 'primereact/menuitem';
 
 interface BottomControlProps {
-	onCommand: (cmd: string) => void
+	onCommand: (cmd: string) => void,
+	callAudioEnabled: boolean,
+	callAudioRecording: boolean,
 }
 
-export function BottomControls({onCommand} : BottomControlProps) {
+export function BottomControls({onCommand, callAudioEnabled, callAudioRecording} : BottomControlProps) {
 	const items: MenuItem[] = [
 		{
 			label: 'Settings',
-			icon: () => <i className="pi pi-cog" style={{color: 'var(--primary-color)', fontSize: '2.5rem' }}></i>,
+			icon: () => <i className="pi pi-cog text-3xl"></i>,
 			command: () => (onCommand('settings')),
 		},
 		{
-			label: 'Room',
-			icon: () => <i className="pi pi-comments" style={{color: 'var(--primary-color)', fontSize: '2.5rem' }}></i>,
-			command: () => (onCommand('room')),
+			label: 'Files',
+			icon: () => <i className="pi pi-briefcase text-3xl"></i>,
+			command: () => (onCommand('files')),
 		},
 		{
-			label: 'Files',
-			icon: () => <i className="pi pi-briefcase" style={{color: 'var(--primary-color)', fontSize: '2.5rem' }}></i>,
-			command: () => (onCommand('files')),
+			label: 'Room',
+			icon: () => <i className="pi pi-comments text-3xl"></i>,
+			command: () => (onCommand('room')),
 		},
 	];
 
+	if (callAudioEnabled) {
+		items.push(
+		{
+			label: 'Mic',
+			icon: () => <i className={"pi pi-microphone text-3xl"+(callAudioRecording ? " bg-primary border-round-md" : "")}></i>,
+			command: () => (onCommand('mic')),
+		}
+		);
+	}
 	return (
 		<div className="card">
 			<Dock model={items} position="bottom" className="fixed"/>
