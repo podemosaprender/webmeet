@@ -3,61 +3,50 @@
 */
 
 import { save, load, entries } from '../services/storage/browser-opfs';
+import { UploadedItem } from '../types/content';
 
 import { useState, useEffect, useRef } from 'react';
 import { Button } from 'primereact/button';
-import { FileUpload, FileUploadHandlerEvent } from 'primereact/fileupload';
-import { Dialog } from 'primereact/dialog';
-import { Image } from 'primereact/image';
-
-interface UploadedItem {
-	name: string,
-	type: string,
-	url?: () => Promise<string>,
-	blob: () => Promise<Blob>
-}
+import { FileUpload as PrimeFileUpload, FileUploadHandlerEvent } from 'primereact/fileupload';
 
 //DBG: window.xf= { load, save, entries, remove }
 
-function Player({item, onClose}: {item: UploadedItem, onClose: () => void}) {
-	const [url, setUrl]= useState('');
-	useEffect( () => {
-		item.blob().then(u => setUrl(URL.createObjectURL(u)))
-	},[item]);
+/**
+ * @return a function to save a File object to a path
+ */
+export function saveToPathHandler(path: string[]) {
+	return (file: File) => save([path, file.name], file)
+}
+
+/**
+ * a FileUpload component
+ */
+export interface FileUploadProps {
+	onFileUploaded: (f: File) => Promise<any>
+}
+
+export function FileUpload(props: FileUploadProps) {
+	const fileUploadCtl= useRef<PrimeFileUpload>(null);
+
+	const customUploader = async (event: FileUploadHandlerEvent) => {
+		await Promise.all( event.files.map(props.onFileUploaded) );
+		fileUploadCtl.current?.clear();
+	};
 
 	return (
-		<Dialog header={item.name} visible={item!=null} onHide={onClose}>
-		{
-			url=='' ? <Button loading />
-			: (
-			 item.type=='png' ? ( //XXX: isImage(...) o "playerFor(...)"
-					<Image src={url} width="250" preview/> 
-			 ) :
-			 item.type=='mp3' ? (
-				 <audio controls> 
-					 <source src={url} type="audio/mp3" />
-				 </audio>
-			 ) :
-			 `??? ${item.type}`
-			)
-		}
-	 </Dialog>
-	)
+			<PrimeFileUpload ref={fileUploadCtl}
+				accept="*" 
+				multiple maxFileSize={100000000} 
+				customUpload uploadHandler={customUploader} 
+				emptyTemplate={<p className="m-0">Drag and drop files to here to upload.</p>}
+			/>
+	);
 }
 
 export function MyFileUpload() {
 	const curPath= ['x1'];
 
-	const fileUploadCtl= useRef<FileUpload>(null);
 	const [uploadedItems, setUploadedItems]= useState(new Array<UploadedItem>());
-	const [showInPlayer, setShowInPlayer]= useState<UploadedItem|null>(null);
-
-	const customUploader = (event: FileUploadHandlerEvent) => {
-		Promise.all( event.files.map( (file: File) =>
-			save([...curPath, file.name], file)
-		));
-		fileUploadCtl.current?.clear();
-	};
 
 	useEffect( () => {
 		entries(curPath).then( es => {
@@ -73,18 +62,9 @@ export function MyFileUpload() {
 	/*
 	*/
 	return (<>
-		{ showInPlayer!=null
-			? <Player item={showInPlayer} onClose={() => setShowInPlayer(null)} />
-			: null
-		}
 
 		<div className="card flex justify-content-center">
-			<FileUpload ref={fileUploadCtl}
-				accept="*" 
-				multiple maxFileSize={100000000} 
-				customUpload uploadHandler={customUploader} 
-				emptyTemplate={<p className="m-0">Drag and drop files to here to upload.</p>}
-			/>
+			XXX:FileUpload
 		</div>
 		
 		<div className="card flex justify-content-center">

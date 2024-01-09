@@ -1,4 +1,5 @@
-import {callMgr} from './services/call'
+import { MediaItem } from './types/content'
+import { callMgr } from './services/call'
 
 import { useState, useCallback, useEffect } from 'react'
 
@@ -36,7 +37,7 @@ function App() {
 	const [micWantsDetector, setMicWantsDetector] = useState(false);
 
 	const [isOpen, setIsOpen] = useState(false);
-	const [text, setText] = useState<string[]>(new Array());
+	const [items, setItems] = useState(new Array<MediaItem>());
 	const [msg, setMsg] = useState('');
 
 	//XXX: is this the best way to share props with views? use a context although it overlaps with CallMgr?
@@ -50,15 +51,15 @@ function App() {
 		micWantsDetector, setMicWantsDetector,
 
 		isOpen, setIsOpen,
-		text, setText,
+		items, setItems,
 		msg, setMsg,
 
-		addText: (m: any) => {
+		addItem: (m: any) => {
 			const t2= [
-				...(text.slice(Math.max(0, text.length-500))),
-				`${m.id}: ${m.text}`	
+				...(items.slice(Math.max(0, items.length-500))),
+				{author: m.id, date: new Date(), text: m.text}	
 			]
-			setText(t2)	
+			setItems(t2)	
 		},
 
 		myConnect:  () => {
@@ -78,7 +79,7 @@ function App() {
 				callMgr.routes.push(pids.trim().split('>').map(x => x.trim()));
 			});
 			callMgr.sendToAll({t:'text', text: txt });
-			WebMeetProps.addText({id: myId, text: msg});
+			WebMeetProps.addItem({id: myId, text: msg});
 			setError('');
 			setMsg('');
 		},
@@ -108,9 +109,9 @@ function App() {
 		WebMeetProps.setPeerId(callMgr.routes.map(route => route.join('>')).join(','));
 		if (e.type=='silence') { WebMeetProps.setMicAudioOn(false) }
 		else if (e.type=='sound') { WebMeetProps.setMicAudioOn(true) }
-		else if (e.type=='text') { WebMeetProps.addText( (e as CustomEvent).detail ); }
+		else if (e.type=='text') { WebMeetProps.addItem( (e as CustomEvent).detail ); }
 		else if (e.type=='error') { const d=(e as CustomEvent).detail; WebMeetProps.setError(`${d.id}: ${d.msg}`) }
-	}, [setMicAudioOn, setIsOpen, setPeerId, setText, text]);
+	}, [setMicAudioOn, setIsOpen, setPeerId, setItems, items]);
 
 	useEffect( () => {
 		callMgr.events.forEach(n => callMgr.addEventListener(n, onUpdate));
