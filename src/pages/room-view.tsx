@@ -38,28 +38,28 @@ function ChatScroller({text}: {text: string[]}) {
 	},[text]);
 
 	return (
-		<div className="card">
+		<div className="card flex-column flex-1">
 			<VirtualScroller ref={scrollerRef}
 				items={text} 
 				itemTemplate={itemTemplate} 
 				inline 
 				itemSize={50}
-				scrollHeight="300px" 
+				style={{height: '100%'}}
 			/>
 		</div>
 	)
 }
 
 export function RoomView(props: RoomViewProps) {
-	return (<>
-		<div className="card flex flex-column md:flex-row gap-3">
-			<div className="p-inputgroup flex-1">
+	return (<div className="flex flex-column gap-2" style={{height: '80vh'}}>
+		<div className="card flex flex-column sm:flex-row gap-3 flex-none">
+			<div className="p-inputgroup flex-auto">
 				<MyInput id="PeerIds" value={props.peerId} setValue={props.setPeerId} />
 				<Button icon="pi pi-users" onClick={props.mySend} />
 			</div>
 
 			<div className="p-inputgroup flex-1">
-				<Button icon="pi pi-microphone" 
+				<Button icon="pi pi-microphone"
 					onClick={props.micToggle} 
 					outlined={! props.micOn} 
 					badge={ props.micAudioOn ? '*' : '.' }
@@ -76,15 +76,15 @@ export function RoomView(props: RoomViewProps) {
 
 		</div>
 
-		<div className="card flex flex-column md:flex-row gap-3">
+		<ChatScroller text={props.text}/>
+
+		<div className="card flex flex-column md:flex-row gap-3 flex-none">
 			<div className="p-inputgroup flex-1">
 				<MyInput id="msg" value={props.msg} setValue={props.setMsg}/>
 				<Button icon="pi pi-caret-right" onClick={() => props.mySend(props.msg)} />
 			</div>
 		</div>
-
-		<ChatScroller text={props.text} />
-	</>)
+	</div>)
 }
 
 

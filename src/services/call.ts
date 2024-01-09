@@ -6,11 +6,15 @@ import * as Peer from './transport/peer'; //XXX: import ONLY needed functions
 import * as IOAudio from './io/audio/index'; //XXX: import ONLY needed functions
 import { playAudioChunks } from './io/audio/util';
 
+import { save } from './storage/browser-opfs';
+
 let emuChunks= new Array(); //XXX: must be per peer
 let emuAudioQueue= new Array();
 let emuAudioIsPlaying= false;
 
 async function processAudioChunks(chunks: any[]) {
+	try {save(['x1',(new Date()).toJSON()+'.mp3'], new Blob(chunks));} catch(ex) { console.log("AUDIO SAVE",ex) } //XXX: handle errors!
+
 	emuAudioQueue.push(chunks);
 	console.log("processAudioChunks add", emuAudioIsPlaying, emuAudioQueue.length);
 	if (emuAudioIsPlaying) return; //A: will be played later by the loop below
