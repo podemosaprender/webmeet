@@ -2,27 +2,21 @@
  * SEE: https://primereact.org/fileupload/#advanced
 */
 
-import { save, load, entries } from '../services/storage/browser-opfs';
+import { save, entries } from '../services/storage/browser-opfs';
 import { UploadedItem } from '../types/content';
 
 import { useState, useEffect, useRef } from 'react';
 import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 import { FileUpload as PrimeFileUpload, FileUploadHandlerEvent } from 'primereact/fileupload';
 
 //DBG: window.xf= { load, save, entries, remove }
 
 /**
- * @return a function to save a File object to a path
- */
-export function saveToPathHandler(path: string[]) {
-	return (file: File) => save([path, file.name], file)
-}
-
-/**
  * a FileUpload component
  */
 export interface FileUploadProps {
-	onFileUploaded: (f: File) => Promise<any>
+	onFileUploaded: (f: File) => Promise<any>,
 }
 
 export function FileUpload(props: FileUploadProps) {
@@ -43,36 +37,18 @@ export function FileUpload(props: FileUploadProps) {
 	);
 }
 
-export function MyFileUpload() {
-	const curPath= ['x1'];
-
-	const [uploadedItems, setUploadedItems]= useState(new Array<UploadedItem>());
-
-	useEffect( () => {
-		entries(curPath).then( es => {
-			setUploadedItems( es.map( e=>	({
-				name: e.name, 
-				type: e.name.replace(/[^]*\.([^\.]*)$/,'$1'),  //A: extension
-				blob: () => load([...curPath, e.name]),
-			})) );
-		});
-	});
-
-//DBG:	window.xm= uploadedItems;
-	/*
-	*/
-	return (<>
-
-		<div className="card flex justify-content-center">
-			XXX:FileUpload
-		</div>
-		
-		<div className="card flex justify-content-center">
-			<ul>{ uploadedItems.map( (item,idx) => (
-				<li key={idx}>{item.name}<Button icon="pi pi-play" onClick={() => setShowInPlayer(item)}/></li>
-			)) }
-			</ul>
-		</div>
-	</>)
+/** a FileUploadDialog
+*/
+export interface FileUploadDialogProps extends FileUploadProps {
+	header?: string,
+	visible: boolean,
+	onClose: () => void,
 }
 
+export function FileUploadDialog(props: FileUploadDialogProps) {
+	return (
+		<Dialog header={props.header || 'Upload'} visible={props.visible} onHide={props.onClose}>
+			<FileUpload onFileUploaded={props.onFileUploaded} />
+		</Dialog>
+	)
+}

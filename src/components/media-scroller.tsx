@@ -9,7 +9,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { VirtualScroller, VirtualScrollerTemplateOptions } from 'primereact/virtualscroller';
 
-export function MediaScroller({items}: {items: string[]}) { //XXX: unify a scrollable list of media for all views
+export interface MediaScrollerProps {
+	items: MediaItem[],
+	onCommand?: (cmd: string, item: MediaItem) => void,
+	commands?: Record<string,string> //U: commandName -> icon string
+}
+
+export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scrollable list of media for all views
 	//XXX: make the player composable e.g. as a parameter {
 	const [showInPlayer, setShowInPlayer]= useState<MediaItem|null>(null);
 	// }
@@ -20,17 +26,31 @@ export function MediaScroller({items}: {items: string[]}) { //XXX: unify a scrol
 		setTimeout( () => { //A: after the list was redrawn //XXX: don't scroll if the user scrolled manually
 			scrollerRef.current?.scrollTo({top: 99999999, left: 0, behavior: 'smooth'}) //XXX: why the other methods fail?
 		},100 );
-	},[items]);
+	},[props.items]);
 
 	const itemTemplate = (item: MediaItem, options: VirtualScrollerTemplateOptions) => {
 		const needsPlayer= item.type!=null; //XXX: length?
+		const cmdButtons= [];
+		for (let cmd in props.commands) { 
+			cmdButtons.push(
+				 <Button key={cmd} size="small" arialabel={cmd} icon={"pi "+props.commands[cmd]} onClick={() => { if (props.onCommand) { props.onCommand(cmd, item)}}} />
+			)
+		}
+
 		return (
-			<div style={{ border: '1px solid red', height: options.props.itemSize + 'px' }}>
-				{item.author}: {item.text}
-				{ needsPlayer 
-					? <Button icon="pi pi-play" onClick={() => setShowInPlayer(item)}/>
-					: ''
-				}
+			<div key={item.text+item.name} className="flex flex-row" style={{ height: options.props.itemSize + 'px' }}>
+				<div className="flex-1">
+					{item.author || 'you'}: {item.text}
+				</div>
+				<div className="flex-initial">
+					{ cmdButtons }
+					{ needsPlayer 
+						? item.type=='dir' 
+							? <Button size="small" arialabel="open dir" icon="pi pi-arrow-down-right" onClick={() => {if (props.onCommand) { props.onCommand('cd',item)}}} />
+							: <Button size="small" arialabel="play" icon="pi pi-play" onClick={() => setShowInPlayer(item)}/>
+						: ''
+					}
+				</div>
 			</div>
 		);
 	};
@@ -41,9 +61,9 @@ export function MediaScroller({items}: {items: string[]}) { //XXX: unify a scrol
 			: null
 		}
 		<VirtualScroller ref={scrollerRef}
-			items={items} 
+			items={props.items} 
 			itemTemplate={itemTemplate} 
-			itemSize={50}
+			itemSize={80}
 			inline 
 			style={{height: '100%'}}
 		/>
