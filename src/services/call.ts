@@ -4,29 +4,12 @@
 
 import * as Peer from './transport/peer'; //XXX: import ONLY needed functions
 import * as IOAudio from './io/audio/index'; //XXX: import ONLY needed functions
+import { MediaItem } from '../types/content';
 import { playAudioChunks } from './io/audio/util';
 
 import { save } from './storage/browser-opfs';
 
 let emuChunks= new Array(); //XXX: must be per peer
-let emuAudioQueue= new Array();
-let emuAudioIsPlaying= false;
-
-async function processAudioChunks(chunks: any[]) {
-	try {save(['x1',(new Date()).toJSON()+'.mp3'], new Blob(chunks));} catch(ex) { console.log("AUDIO SAVE",ex) } //XXX: handle errors!
-
-	emuAudioQueue.push(chunks);
-	console.log("processAudioChunks add", emuAudioIsPlaying, emuAudioQueue.length);
-	if (emuAudioIsPlaying) return; //A: will be played later by the loop below
-	emuAudioIsPlaying= true;
-	let next;
-	while (next= emuAudioQueue.shift()) {
-		console.log("processAudioChunks next", emuAudioIsPlaying, emuAudioQueue.length);
-		await playAudioChunks( next ); //XXX:don't start before previous finishes, use a queue!
-	}
-	emuAudioIsPlaying= false;
-	console.log("processAudioChunks done", emuAudioIsPlaying, emuAudioQueue.length);
-}
 
 class CallMgr extends EventTarget {
 	_myId= '';
@@ -35,16 +18,28 @@ class CallMgr extends EventTarget {
 
 	_isOpen= false;
 	get isOpen() { return this._isOpen }
-	get events() { return ['error','open','sound','silence','peer','text']}
+	get events() { return ['error','open','sound','silence','peer','item']}
+
+	async _onAudioEnd(chunks: any[], data: any) {
+		//try {save(['x1',(new Date()).toJSON()+'.mp3'], new Blob(chunks));} catch(ex) { console.log("AUDIO SAVE",ex) } //XXX: handle errors!
+		if (chunks.length<1) return; //XXX:error?
+
+		const blob= new Blob(chunks);
+		//XXX: copied, DRY {
+		const author= data.r[0];
+		const date= new Date(); //XXX: use from sender+NTP
+		const item: MediaItem= {
+			type: 'mp3', text: 'audio',
+			blob: async () => blob,
+			name: author+'__'+date,
+			author, date,
+		}
+		this.dispatchEvent(new CustomEvent('item',{detail: item}));
+		// DRY }
+	}
 
 	_onTransportData= (data: any) => { //U: standard event handler for all transports
-		if (data.t=='audio-chunk') { //XXX:make extensible/composable with a kv data.t => handler?
-			emuChunks.push(data.blob);
-			//XXX: @Maxi se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
-		} else if (data.t=='audio-end') {
-			processAudioChunks( emuChunks ); //A: don't start before previous finishes, use a queue!
-			emuChunks= new Array();
-		} else if (data.t=='open') {
+		if (data.t=='open') {
 			this._isOpen= true;
 			this.dispatchEvent(new Event('open'));
 		} else if (data.t=='peer') {
@@ -52,14 +47,32 @@ class CallMgr extends EventTarget {
 		} else if (data.t=='error') {
 			this.dispatchEvent(new Event('peer'));
 			this.dispatchEvent(new CustomEvent('error',{detail:{msg: String(data.err), id: (data.r||[])[0]}}) );
+
+		} else if (data.t=='audio-chunk') { //XXX:make extensible/composable with a kv data.t => handler?
+			emuChunks.push(data.blob);
+			//XXX: @Maxi se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
+		} else if (data.t=='audio-end') { //XXX: receive from multiple peers simultaneously!
+			this._onAudioEnd( emuChunks, data ); //A: don't start before previous finishes, use a queue!
+			emuChunks= new Array();
 		} else if (data.t=='text') {
-			this.dispatchEvent(new CustomEvent('text', {detail: {text: data.text, id: data.r[0]}}));
+			const author= data.r[0];
+			const date= new Date(); //XXX: use from sender+NTP
+			const item: MediaItem= {
+				type: 'text',
+				text: data.text,
+				blob: async () => (new Blob([data.text])),
+				name: author+'__'+date,
+				author, date,
+			}
+
+			this.dispatchEvent(new CustomEvent('item',{detail: item}));
 		} else if (data.t=='ping') {
 			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.r.toReversed().slice(1, data.r.length));
 		} else if (data.t=='pong') {
 			let dt= Date.now() - data.ping_t
 			console.log('CALL pong', data.r[0],dt)	 
 			this.dispatchEvent(new CustomEvent('text', {detail: {text: `PONG ${dt}`, id: data.r[0]}}));
+
 		} else if (data.t =='forward') {
 			this.sendTo(data.d, data.r, data.ri);
 			console.log("forwarding message", data);
@@ -69,15 +82,20 @@ class CallMgr extends EventTarget {
 		}
 	}
 
+	_audioLastIdx= -1;
 	_onAudioData= (e: Event) => {
-		this.sendToAll({t: 'audio-chunk', blob: (e as CustomEvent).detail.blob});
+		this._audioLastIdx++;
+		this.sendToAll({t: 'audio-chunk', idx: this._audioLastIdx, blob: (e as CustomEvent).detail.blob});
 		this.dispatchEvent(new Event('sound'))
 	}
 
 	_onAudioSilence=  () => {
 		console.log("onAudioSilence");
-		this.sendToAll({t: 'audio-end'});
+		if (this._audioLastIdx>-1) {
+			this.sendToAll({t: 'audio-end', idx: this._audioLastIdx});
+		}
 		this.dispatchEvent(new Event('silence'))
+		this._audioLastIdx= -1;
 	}
 
 	connectAs(myId: string) {

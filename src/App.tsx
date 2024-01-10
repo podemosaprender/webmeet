@@ -55,10 +55,10 @@ function App() {
 		items, setItems,
 		msg, setMsg,
 
-		addItem: (m: any) => {
+		addItem: (it: MediaItem) => {
 			const t2= [
 				...(items.slice(Math.max(0, items.length-500))),
-				{author: m.id, date: new Date(), text: m.text} as MediaItem
+				it	
 			]
 			setItems(t2)	
 		},
@@ -79,8 +79,16 @@ function App() {
 			peerId.trim().split(',').forEach(pids => {
 				callMgr.routes.push(pids.trim().split('>').map(x => x.trim()));
 			});
-			callMgr.sendToAll({t:'text', text: txt });
-			WebMeetProps.addItem({id: myId, text: msg});
+			callMgr.sendToAll({t:'text', text: txt }); //XXX:send MediaItem
+			const date= new Date();
+			const it: MediaItem= {
+				type: 'text',
+				text: msg,
+				author: myId, date,
+				name: myId+'__'+date,
+				blob: async () => (new Blob([msg]))
+			};
+			WebMeetProps.addItem(it);
 			setError('');
 			setMsg('');
 		},
@@ -110,7 +118,7 @@ function App() {
 		WebMeetProps.setPeerId(callMgr.routes.map(route => route.join('>')).join(','));
 		if (e.type=='silence') { WebMeetProps.setMicAudioOn(false) }
 		else if (e.type=='sound') { WebMeetProps.setMicAudioOn(true) }
-		else if (e.type=='text') { WebMeetProps.addItem( (e as CustomEvent).detail ); }
+		else if (e.type=='item') { WebMeetProps.addItem( (e as CustomEvent).detail as MediaItem ); }
 		else if (e.type=='error') { const d=(e as CustomEvent).detail; WebMeetProps.setError(`${d.id}: ${d.msg}`) }
 	}, [setMicAudioOn, setIsOpen, setPeerId, setItems, items]);
 

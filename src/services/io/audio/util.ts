@@ -27,7 +27,7 @@ export function playAudioChunks(chunks: any) {
 			a.addEventListener('ended', onOk);
 			a.addEventListener('error', onOk); //A: only to know it finished
 			a.play(); 
-		},200); //TODO: usar promise 
+		},200); 
 	});
 
 }

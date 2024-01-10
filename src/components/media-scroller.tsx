@@ -29,7 +29,8 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 	},[props.items]);
 
 	const itemTemplate = (item: MediaItem, options: VirtualScrollerTemplateOptions) => {
-		const needsPlayer= item.type!=null; //XXX: length?
+		const needsPlayer= item.type!=null && item.type!='text'; //XXX: length?
+		const playInline= ['mp3','png'].indexOf(item.type)>-1; 
 		const cmdButtons= [];
 		for (let cmd in props.commands) { 
 			cmdButtons.push(
@@ -41,13 +42,16 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 			<div key={item.text+item.name} className="flex flex-row" style={{ height: options.props.itemSize + 'px' }}>
 				<div className="flex-1">
 					{item.author || 'you'}: {item.text}
+					{ playInline ? <Player item={item} /> : null }
 				</div>
 				<div className="flex-initial">
 					{ cmdButtons }
 					{ needsPlayer 
 						? item.type=='dir' 
 							? <Button size="small" aria-label="open dir" icon="pi pi-arrow-down-right" onClick={() => {if (props.onCommand) { props.onCommand('cd',item)}}} />
-							: <Button size="small" aria-label="play" icon="pi pi-play" onClick={() => setShowInPlayer(item)}/>
+							: playInline 
+								? null
+								: <Button size="small" aria-label="play" icon="pi pi-play" onClick={() => setShowInPlayer(item)}/>
 						: ''
 					}
 				</div>
