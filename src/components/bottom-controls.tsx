@@ -28,6 +28,11 @@ export function BottomControls({onCommand, callAudioEnabled, callAudioRecording}
 			icon: () => <i className="pi pi-comments text-3xl"></i>,
 			command: () => (onCommand('room')),
 		},
+		{
+			label: 'Board',
+			icon: () => <i className='pi pi-pencil text-3xl'></i>,
+			command: () => (onCommand('board')),
+		},
 	];
 
 	if (callAudioEnabled) {

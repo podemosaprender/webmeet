@@ -19,6 +19,7 @@ import { BottomControls } from './components/bottom-controls';
 import { SettingsView } from './pages/settings-view';
 import { RoomView } from './pages/room-view';
 import { AssetsView } from './pages/assets-view';
+import { BoardView } from './pages/board-view';
 
 import { Helmet } from 'react-helmet';
 import { Message } from 'primereact/message';
@@ -129,6 +130,17 @@ function App() {
 		else { setView(cmd) }
 	}
 
+	const roomElements = {
+		defaultView: <SettingsView {...WebMeetProps} />,
+		unknownView: <p>Unknown view {view}</p>,
+		views: [
+			{name:'settings', src:<SettingsView {...WebMeetProps} />},
+			{name:'room', src: <RoomView {...WebMeetProps} />},
+			{name:'files', src: <AssetsView />},
+			{name:'board', src:<BoardView />}
+		]
+	};
+
 	return (
 		<PrimeReactProvider>
 			<Helmet>
@@ -156,10 +168,9 @@ function App() {
 				</div>
 
 				{ 
-					!callMgr.isOpen || view=='' || myId=='' || view=='settings' ? <SettingsView {...WebMeetProps} /> :
-					view=='room' ? <RoomView {...WebMeetProps} /> :
-					view=='files' ? <AssetsView /> :
-					<p>Unknown view {view}</p>
+					!callMgr.isOpen || view=='' || myId=='' ? roomElements.defaultView : 
+					roomElements.views.some( v => v.name == view) ? roomElements.views.find( v => v.name == view)?.src :
+					roomElements.unknownView
 				}
 
 			</div>
