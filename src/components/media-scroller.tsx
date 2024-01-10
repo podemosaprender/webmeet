@@ -7,7 +7,7 @@ import { Player } from '../components/player';
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from 'primereact/button';
-import { VirtualScroller, VirtualScrollerTemplateOptions } from 'primereact/virtualscroller';
+import { DataScroller } from 'primereact/datascroller';
 
 export interface MediaScrollerProps {
 	items: MediaItem[],
@@ -24,11 +24,11 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 
 	useEffect(() => { 
 		setTimeout( () => { //A: after the list was redrawn //XXX: don't scroll if the user scrolled manually
-			scrollerRef.current?.scrollTo({top: 99999999, left: 0, behavior: 'smooth'}) //XXX: why the other methods fail?
+			//scrollerRef.current?.scrollTo({top: 99999999, left: 0, behavior: 'smooth'}) //XXX: why the other methods fail?
 		},100 );
 	},[props.items]);
 
-	const itemTemplate = (item: MediaItem, options: VirtualScrollerTemplateOptions) => {
+	const itemTemplate = (item: MediaItem) => {
 		const needsPlayer= item.type!=null && item.type!='text'; //XXX: length?
 		const playInline= ['mp3','png'].indexOf(item.type)>-1; 
 		const cmdButtons= [];
@@ -39,9 +39,9 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 		}
 
 		return (
-			<div key={item.text+item.name} className="flex flex-row" style={{ height: options.props.itemSize + 'px' }}>
+			<div key={item.text+item.name} className="flex flex-row">
 				<div className="flex-1">
-					{item.author || 'you'}: {item.text}
+					{item.author || 'you'}: {item.text} <br />
 					{ playInline ? <Player item={item} /> : null }
 				</div>
 				<div className="flex-initial">
@@ -64,12 +64,14 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 			? <Player item={showInPlayer} onClose={() => setShowInPlayer(null)} />
 			: null
 		}
-		<VirtualScroller ref={scrollerRef}
-			items={props.items} 
+		<DataScroller ref={scrollerRef}
+			value={props.items} 
 			itemTemplate={itemTemplate} 
-			itemSize={80}
 			inline 
-			style={{height: '100%'}}
+			rows={100}
+			pt={{
+				root: {style: {height: '100%', overflowY: 'scroll'}}
+			}}
 		/>
 	</>)
 }

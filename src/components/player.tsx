@@ -59,7 +59,10 @@ export function Player({item}: {item: UploadedItem}) {
 			url=='' ? <Button loading />
 			: (
 			 item.type=='png' ? ( //XXX: isImage(...) o "playerFor(...)"
-					<Image src={url} width="250" preview/> 
+			 	<Image src={url} preview downloadable
+					alt={item.name}
+			 		imageStyle={{maxHeight: '10vh'}}
+				/> 
 			 ) :
 			 item.type=='mp3' ? (
 				 <audio ref={onAudioRef} controls> 
