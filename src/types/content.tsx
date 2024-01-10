@@ -16,7 +16,7 @@ export interface UploadedItem {
 */
 export interface MediaItem extends UploadedItem {
 	author: string,
-	date: Date,
+	date?: Date,
 	text: string
 }
 

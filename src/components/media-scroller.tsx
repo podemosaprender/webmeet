@@ -33,7 +33,7 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 		const cmdButtons= [];
 		for (let cmd in props.commands) { 
 			cmdButtons.push(
-				 <Button key={cmd} size="small" arialabel={cmd} icon={"pi "+props.commands[cmd]} onClick={() => { if (props.onCommand) { props.onCommand(cmd, item)}}} />
+				 <Button key={cmd} size="small" aria-label={cmd} icon={"pi "+props.commands[cmd]} onClick={() => { if (props.onCommand) { props.onCommand(cmd, item)}}} />
 			)
 		}
 
@@ -46,8 +46,8 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 					{ cmdButtons }
 					{ needsPlayer 
 						? item.type=='dir' 
-							? <Button size="small" arialabel="open dir" icon="pi pi-arrow-down-right" onClick={() => {if (props.onCommand) { props.onCommand('cd',item)}}} />
-							: <Button size="small" arialabel="play" icon="pi pi-play" onClick={() => setShowInPlayer(item)}/>
+							? <Button size="small" aria-label="open dir" icon="pi pi-arrow-down-right" onClick={() => {if (props.onCommand) { props.onCommand('cd',item)}}} />
+							: <Button size="small" aria-label="play" icon="pi pi-play" onClick={() => setShowInPlayer(item)}/>
 						: ''
 					}
 				</div>

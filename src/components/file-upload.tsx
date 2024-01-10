@@ -2,11 +2,7 @@
  * SEE: https://primereact.org/fileupload/#advanced
 */
 
-import { save, entries } from '../services/storage/browser-opfs';
-import { UploadedItem } from '../types/content';
-
-import { useState, useEffect, useRef } from 'react';
-import { Button } from 'primereact/button';
+import { useRef } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { FileUpload as PrimeFileUpload, FileUploadHandlerEvent } from 'primereact/fileupload';
 

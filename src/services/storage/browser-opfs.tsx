@@ -49,10 +49,13 @@ export async function entries( path: string[] ): Promise<FSMediaItem[]> {
 	const subDir = await dirHandle(path);
 	let r= new Array<FSMediaItem>();
 	for await (let [name, _handle] of subDir.entries()) {
+		let type= _handle.kind=='directory' ? 'dir' : name.replace(/[^]*\.([^\.]*)$/,'$1');  //A: extension
 		r.push({
-			name,
+			author: 'you', 
+			date: undefined, //A: not available, was deprecated SEE: https://developer.mozilla.org/en-US/docs/Web/API/File/lastModifiedDate
 			text: name, //A: so it shows in MediaScroller
-			type: _handle.kind=='directory' ? 'dir' : name.replace(/[^]*\.([^\.]*)$/,'$1'),  //A: extension
+			name,
+			type,
 			blob: () => load([...path, name]),
 			_handle,
 		})

@@ -58,7 +58,7 @@ function App() {
 		addItem: (m: any) => {
 			const t2= [
 				...(items.slice(Math.max(0, items.length-500))),
-				{author: m.id, date: new Date(), text: m.text}	
+				{author: m.id, date: new Date(), text: m.text} as MediaItem
 			]
 			setItems(t2)	
 		},

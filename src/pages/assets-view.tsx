@@ -78,9 +78,9 @@ export function AssetsView() {
 		</div>
 
 		<div className="card text-right">
-			<Button className="m-1" arialabel="on folder up" icon="pi pi-arrow-up-left" onClick={()=> setPath(path.slice(0,-1))} />
-			<Button className="m-1" arialabel="new folder" icon="pi pi-folder" onClick={() => setWantsNewFolder(true)} />
-			<Button className="m-1" arialabel="upload" icon="pi pi-upload" onClick={() => setWantsUpload(true)} />
+			<Button className="m-1" aria-label="on folder up" icon="pi pi-arrow-up-left" onClick={()=> setPath(path.slice(0,-1))} />
+			<Button className="m-1" aria-label="new folder" icon="pi pi-folder" onClick={() => setWantsNewFolder(true)} />
+			<Button className="m-1" aria-label="upload" icon="pi pi-upload" onClick={() => setWantsUpload(true)} />
 		</div>
 	</>)
 }
