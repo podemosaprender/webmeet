@@ -8,7 +8,7 @@
 
 import * as Peer from './transport/peer'; //XXX: import ONLY needed functions
 import * as IOAudio from './io/audio/index'; //XXX: import ONLY needed functions
-import { MediaItem } from '../types/content';
+import { MediaItem, UploadedItem } from '../types/content';
 import { NodeId, Route, Message, StdMessageTypes, MediaItemDataFirstPart, MediaItemDataPart, MediaItemData } from '../types/transport';
 
 import Emittery from 'emittery';
@@ -42,25 +42,7 @@ class CallMgr extends Emittery<CallMgrEvents> {
 	_isOpen= false;
 	get isOpen() { return this._isOpen }
 
-	async _onAudioEnd(chunks: any[], data: any) {
-		//try {save(['x1',(new Date()).toJSON()+'.mp3'], new Blob(chunks));} catch(ex) { console.log("AUDIO SAVE",ex) } //XXX: handle errors!
-		if (chunks.length<1) return; //XXX:error?
-
-		const blob= new Blob(chunks);
-		//XXX: copied, DRY {
-		const author= data.r[0];
-		const date= new Date(); //XXX: use from sender+NTP
-		const item: MediaItem= {
-			type: 'mp3', text: 'audio',
-			blob: async () => blob,
-			name: author+'__'+date.toJSON(),
-			author, date,
-		}
-		this.emit('item', item);
-		// DRY }
-	}
-
-	_onTransportMsg= (msg: Message) => { //U: standard event handler for all transports
+	_onTransportMsg= async (msg: Message) => { //U: standard event handler for all transports
 		if (msg.type == StdMessageTypes.Open) {
 			this._isOpen= true;
 			this.emit('open');
@@ -104,9 +86,9 @@ class CallMgr extends Emittery<CallMgrEvents> {
 */
 		} else if (msg.type == StdMessageTypes.MediaItem) {
 			//XXX:SEC validations?
-			const it: MediaItem= {... msg.payload,
-				text: msg.payload?.type=='text' ? msg.payload.blob : null,
-				blob: async () => msg.payload?.blob,
+			const itemData: MediaItemData= msg.payload;
+			const it: MediaItem= {... itemData,
+				blob: async () => new Blob([itemData.data]),//A: uint8array -> blobParts
 			}
 			this.emit('item', it);
 		} else if (msg.type == StdMessageTypes.MediaItemPart) {
@@ -168,7 +150,19 @@ class CallMgr extends Emittery<CallMgrEvents> {
 		this.routes.forEach( route => this.sendTo(data, route) );
 	}
 
-	sendMessageToAll(msg: Message) {
+	async sendItemToAll(item: MediaItem) {
+		const blob= await item.blob();
+		const msg= new Message();
+		msg.topics=['meet']; //XXX: add e.g. name of this meeting
+		msg.source= this._myId;
+		msg.type= 'item';
+		msg.payload= { //XXX: extract from MediaItem
+			type: item.type,
+			author: item.author, date: item.date,
+			name: item.name, 
+			text: item.text,
+			data: blob, 
+		} as MediaItemData;
 		this.sendToAll(msg);
 	}
 

@@ -56,6 +56,7 @@ export interface MediaItemData 	{
 	name: string
 	author: string
 	date: Date
+	text: string
 	data?: Blob
 }
 
@@ -75,7 +76,7 @@ export interface MediaItemDataPart {
 /**
  * We send the MediaItemData in the first part
  */
-export interface MediaItemDataFirstPart extends Omit<MediaItemData,'data'>, MediaItemDataPart {
+export interface MediaItemDataFirstPart extends Omit<MediaItemData,'data'|'text'>, MediaItemDataPart {
 }
 
 /** 

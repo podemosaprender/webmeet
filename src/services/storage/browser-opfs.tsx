@@ -46,6 +46,10 @@ export async function remove( path: string[] ) {
 	return await subDir.removeEntry( fname, {recursive: true} );
 }
 
+export function fileExtension(name: string) {
+	return name.replace(/[^]*\.([^\.]*)$/,'$1');  //A: extension
+}
+
 export class FSMediaItem implements MediaItem {
 	protected _handle: any
 	protected _path: string[]
@@ -61,7 +65,7 @@ export class FSMediaItem implements MediaItem {
 		this._handle= handle;
 		this.name= name;
 		this._path= path;
-		this.type= handle.kind=='directory' ? 'dir' : name.replace(/[^]*\.([^\.]*)$/,'$1');  //A: extension
+		this.type= handle.kind=='directory' ? 'dir' : fileExtension(name)
 	}
 }
 

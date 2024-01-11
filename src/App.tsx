@@ -7,9 +7,10 @@
  * @module
  */
 
-import { MediaItem } from './types/content'
-import { Message, MediaItemData } from './types/transport'
+import { MediaItem, mkMediaItem } from './types/content'
+import { Message} from './types/transport'
 import { callMgr } from './services/call'
+import { fileExtension } from './services/storage/browser-opfs.tsx'
 
 import { useState, useCallback, useEffect } from 'react'
 
@@ -86,40 +87,26 @@ export default function App() {
 			}
 		},
 
-		mySend:  (txt: any)=> {
-			txt= typeof(txt)=='string' ? txt.trim() : `from ${myId} ${(new Date()).toString()}`
+		mySend:  async (cont: any)=> {
 			callMgr.routes = [];
-
 			peerId.trim().split(',').forEach(pids => { //XXX:toLIB
 				callMgr.routes.push(pids.trim().split('>').map(x => x.trim()));
 			});
+			//A: update routes
+			
+			const isFile= cont instanceof File;
 
-
-			const date= new Date();
-			const it: MediaItem= {
-				type: 'text',
-				text: msg,
-				author: myId, date,
-				name: myId+'__'+date.toJSON(),
-				blob: async () => (new Blob([msg]))
-			};
-
-			const tmsg= new Message(); //XXX:send just MediaItem instead, move to CallMgr {
-			tmsg.topics=['meet']; //XXX: add e.g. name of this meeting
-			tmsg.source= myId;
-			tmsg.type= 'item';
-			tmsg.payload= { //XXX: extract from MediaItem
-				type: 'text',
-				author: myId, date,
-				name: myId+'__'+date.toJSON(),
-				blob: msg
-			} as MediaItemData;
-			callMgr.sendToAll(tmsg); 
-			//XXX: move to CallMgr }
-
+			const it= mkMediaItem({
+				type: isFile ? fileExtension(cont.name) : 'text',
+				author: myId,
+				text: isFile ? cont.name : cont+'',
+				blob: isFile ? async () => cont : undefined,
+			});
+			callMgr.sendItemToAll(it);
 			WebMeetProps.addItem(it);
 			setError('');
 			setMsg('');
+			return true; 
 		},
 
 		micToggle:  ()=>  {
