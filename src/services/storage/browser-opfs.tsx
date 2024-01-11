@@ -1,6 +1,11 @@
-/** Store files in the browser's OriginPrivateFileSystem
+/** 
+ * Store files in the browser's OriginPrivateFileSystem
+ *
  * XXX: upgrade to API interface for other storage types
- * SEE: https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream/write
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream/write
+ *
+ * @module
  */
 
 import { MediaItem } from '../../types/content';
@@ -41,24 +46,30 @@ export async function remove( path: string[] ) {
 	return await subDir.removeEntry( fname, {recursive: true} );
 }
 
-export interface FSMediaItem extends MediaItem {
-	_handle?: any,
+export class FSMediaItem implements MediaItem {
+	protected _handle: any
+	protected _path: string[]
+
+	readonly author= 'you' 
+	readonly date= undefined //A: not available, was deprecated SEE: https://developer.mozilla.org/en-US/docs/Web/API/File/lastModifiedDate
+	get text() { return this.name } //A: so it shows in MediaScroller
+	name: string
+	type: string
+	blob() { return load([... this._path, this.name]) }
+
+	constructor(path: string[], name: string, handle: any) {
+		this._handle= handle;
+		this.name= name;
+		this._path= path;
+		this.type= handle.kind=='directory' ? 'dir' : name.replace(/[^]*\.([^\.]*)$/,'$1');  //A: extension
+	}
 }
 
 export async function entries( path: string[] ): Promise<FSMediaItem[]> { 
 	const subDir = await dirHandle(path);
 	let r= new Array<FSMediaItem>();
 	for await (let [name, _handle] of subDir.entries()) {
-		let type= _handle.kind=='directory' ? 'dir' : name.replace(/[^]*\.([^\.]*)$/,'$1');  //A: extension
-		r.push({
-			author: 'you', 
-			date: undefined, //A: not available, was deprecated SEE: https://developer.mozilla.org/en-US/docs/Web/API/File/lastModifiedDate
-			text: name, //A: so it shows in MediaScroller
-			name,
-			type,
-			blob: () => load([...path, name]),
-			_handle,
-		})
+		r.push(new FSMediaItem(path, name, _handle)) 
 	}
 	return r;
 }
