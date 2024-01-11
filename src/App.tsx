@@ -1,3 +1,12 @@
+/**
+ * Main component/vieport
+ *
+ * @remark
+ * Other views are controlled through useState (no router)
+ *
+ * @module
+ */
+
 import { MediaItem } from './types/content'
 import { callMgr } from './services/call'
 
@@ -26,7 +35,10 @@ import { Message } from 'primereact/message';
 
 //XXX: for mic control position SEE: https://primereact.org/dock/
 
-function App() {
+/**
+ * @component
+ */
+export default function App() {
 	const [view, setView]= useState('');
 
 	const [myId, setMyId] = useState('');
@@ -55,13 +67,13 @@ function App() {
 		items, setItems,
 		msg, setMsg,
 
-		addItem: (it: MediaItem) => {
+		addItem: useCallback( (it: MediaItem) => {
 			const t2= [
 				...(items.slice(Math.max(0, items.length-500))),
 				it	
 			]
 			setItems(t2)	
-		},
+		}, [items]),
 
 		myConnect:  () => {
 			const v= myId.trim(); setMyId(v);
@@ -112,20 +124,38 @@ function App() {
 		isLocalhost:  window.location.href.match(/(localhost)|(127\.0\.0\.1)/)!=null,
 	}
 
-	const onUpdate= useCallback( (e: Event) => {
+	const onUpdate= useCallback( () => {
 		WebMeetProps.setIsOpen(callMgr.isOpen);	
-
 		WebMeetProps.setPeerId(callMgr.routes.map(route => route.join('>')).join(','));
-		if (e.type=='silence') { WebMeetProps.setMicAudioOn(false) }
-		else if (e.type=='sound') { WebMeetProps.setMicAudioOn(true) }
-		else if (e.type=='item') { WebMeetProps.addItem( (e as CustomEvent).detail as MediaItem ); }
-		else if (e.type=='error') { const d=(e as CustomEvent).detail; WebMeetProps.setError(`${d.id}: ${d.msg}`) }
-	}, [setMicAudioOn, setIsOpen, setPeerId, setItems, items]);
+	}, [setIsOpen, setPeerId]);
 
 	useEffect( () => {
-		callMgr.events.forEach(n => callMgr.addEventListener(n, onUpdate));
-		return () => { callMgr.events.forEach(n => callMgr.removeEventListener(n,onUpdate)); }
-	});
+		callMgr.on('item', WebMeetProps.addItem );
+		return () => { callMgr.off('item', WebMeetProps.addItem) }
+	}, [WebMeetProps.addItem] )
+
+	useEffect( () => {
+		const hOn= () => {WebMeetProps.setMicAudioOn(false)}
+		const hOff= () => {WebMeetProps.setMicAudioOn(true)}
+		callMgr.on('silence', hOn),
+		callMgr.on('sound', hOff)
+		return () => {
+			callMgr.off('silence', hOn),
+			callMgr.off('sound', hOff)
+		}
+	}, [WebMeetProps.setMicAudioOn] )
+
+	useEffect( () => {
+		const hError= (d:{id:string,msg:string}) => { WebMeetProps.setError(`${d.id}: ${d.msg}`); onUpdate(); }
+		callMgr.on('error', hError); 
+		callMgr.on('open', onUpdate);
+		callMgr.on('peer', onUpdate);
+		return () => { 
+			callMgr.off('error', hError); 
+			callMgr.off('open', onUpdate);
+			callMgr.off('peer', onUpdate);
+		}
+	},[onUpdate]); 
 
 	useEffect( () => {
 		if (view=='' && callMgr.isOpen) { //A: after first login
@@ -186,4 +216,3 @@ function App() {
 	)
 }
 
-export default App
