@@ -3,14 +3,14 @@
 * SEE: https://peerjs.com/docs/#peeron
 * SEE: https://peerjs.com/docs/#dataconnection-on
 */
+import { NodeId, Message, StdMessageTypes } from '../../types/transport';
 import { Peer } from 'peerjs';
 
 let _myCx : Peer;
 /**
  * peerId -> connection
  */
-let _peerCx: Record<string,any>= {}
-
+let _peerCx: Record<NodeId,any>= {}
 
 /** accept connections with myId
 * @param myId: string with the nick/id other users recognize
@@ -26,10 +26,17 @@ export function open(myId: string, onData: (data: any) => void) {
 	console.log("PEER MY CX START");
 	_myCx.on('open', function(id) {
 		console.log('My peer ID is: ' + id);
-		onData({t: 'open', id});
+		const msg= new Message();
+		msg.type= StdMessageTypes.Open;
+		msg.source= id;
+		onData(msg);
 	});
 	_myCx.on('error', (err) => {
-		onData({t: 'error', id: myId, err} ) 
+		const msg= new Message();
+		msg.type= StdMessageTypes.Error;
+		msg.source= myId;
+		msg.payload= err;
+		onData(msg) 
 		//A: Can't connect to peer is reported here.
 	})
 	_myCx.on("connection", (cx) => { 
@@ -37,16 +44,29 @@ export function open(myId: string, onData: (data: any) => void) {
 
 		cx.on("open", () => {
 			_peerCx[ cx.peer ]= cx;
-			cx.send({t: 'hello', from: myId});
-			onData({t: 'peer', id: cx.peer});
+			const msg= new Message();
+			msg.source= cx.peer;
+			msg.type= StdMessageTypes.Peer;
+			cx.send(msg);
+			onData(msg);
 		});
+
 		cx.on("data", (data: any) => { 
 			console.log("PEER DATA",data); 
-			onData({...data, id: cx.peer});
+
+			const msg= new Message();
+
+			if (typeof(data)=="object") { //A: ANY object will be considered a Message
+				msg.assign(data)
+			}
+
+			onData(msg);
 		});
+
 		cx.on('error', (err: any) => {
 			onData({t: 'error', id: cx.peer, err} ) 
 		})
+
 		cx.on('close', () => {
 			onData({t: 'error', id: cx.peer, err: 'close'} ) 
 		});

@@ -9,7 +9,7 @@
  */
 
 import { MediaItem } from '../types/content';
-import { Player } from '../components/player';
+import { Player, canPlayInline } from '../components/player';
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from 'primereact/button';
@@ -39,7 +39,7 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 
 	const itemTemplate = (item: MediaItem) => {
 		const needsPlayer= item.type!=null && item.type!='text'; //XXX: length?
-		const playInline= ['mp3','png'].indexOf(item.type)>-1; 
+		const playInline= canPlayInline(item);
 		const cmdButtons= [];
 		for (let cmd in props.commands) { 
 			cmdButtons.push(

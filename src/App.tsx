@@ -8,6 +8,7 @@
  */
 
 import { MediaItem } from './types/content'
+import { Message, MediaItemData } from './types/transport'
 import { callMgr } from './services/call'
 
 import { useState, useCallback, useEffect } from 'react'
@@ -31,7 +32,7 @@ import { AssetsView } from './pages/assets-view';
 import { BoardView } from './pages/board-view';
 
 import { Helmet } from 'react-helmet';
-import { Message } from 'primereact/message';
+import { Message as PrimeMessage } from 'primereact/message';
 
 //XXX: for mic control position SEE: https://primereact.org/dock/
 
@@ -88,18 +89,34 @@ export default function App() {
 		mySend:  (txt: any)=> {
 			txt= typeof(txt)=='string' ? txt.trim() : `from ${myId} ${(new Date()).toString()}`
 			callMgr.routes = [];
-			peerId.trim().split(',').forEach(pids => {
+
+			peerId.trim().split(',').forEach(pids => { //XXX:toLIB
 				callMgr.routes.push(pids.trim().split('>').map(x => x.trim()));
 			});
-			callMgr.sendToAll({t:'text', text: txt }); //XXX:send MediaItem
+
+
 			const date= new Date();
 			const it: MediaItem= {
 				type: 'text',
 				text: msg,
 				author: myId, date,
-				name: myId+'__'+date,
+				name: myId+'__'+date.toJSON(),
 				blob: async () => (new Blob([msg]))
 			};
+
+			const tmsg= new Message(); //XXX:send just MediaItem instead, move to CallMgr {
+			tmsg.topics=['meet']; //XXX: add e.g. name of this meeting
+			tmsg.source= myId;
+			tmsg.type= 'item';
+			tmsg.payload= { //XXX: extract from MediaItem
+				type: 'text',
+				author: myId, date,
+				name: myId+'__'+date.toJSON(),
+				blob: msg
+			} as MediaItemData;
+			callMgr.sendToAll(tmsg); 
+			//XXX: move to CallMgr }
+
 			WebMeetProps.addItem(it);
 			setError('');
 			setMsg('');
@@ -146,7 +163,7 @@ export default function App() {
 	}, [WebMeetProps.setMicAudioOn] )
 
 	useEffect( () => {
-		const hError= (d:{id:string,msg:string}) => { WebMeetProps.setError(`${d.id}: ${d.msg}`); onUpdate(); }
+		const hError= (msg: Message) => { WebMeetProps.setError(`${msg.source}: ${msg.payload}`); onUpdate(); }
 		callMgr.on('error', hError); 
 		callMgr.on('open', onUpdate);
 		callMgr.on('peer', onUpdate);
@@ -194,13 +211,13 @@ export default function App() {
 				<p><small>WebMeet {view} as {myId}</small></p>
 
 				{ WebMeetProps.isLocalhost 
-					? <Message severity="error" text="WARNING: does NOT work if the page is loaded from localhost, use your LAN IP" />
+					? <PrimeMessage severity="error" text="WARNING: does NOT work if the page is loaded from localhost, use your LAN IP" />
 					: null
 				}
 
 				<div className="card">
 					{ WebMeetProps.error!=''
-						? <Message severity="error" text={WebMeetProps.error} />
+						? <PrimeMessage severity="error" text={WebMeetProps.error} />
 						: null
 					}
 				</div>

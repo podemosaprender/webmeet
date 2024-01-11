@@ -36,6 +36,18 @@ async function PlayQueueAdd(playFn: PlayFn) { //XXX:move to module, coordinate q
 	console.log("PlayQueue done", PlayQueue.length, _queueIsPlaying);
 }
 
+export function isImage(item: UploadedItem) { 
+	return ['png','jpg','svg'].indexOf(item.type)>-1 
+}
+
+export function isAudio(item: UploadedItem) { 
+	return ['mp3','ogg','audio'].indexOf(item.type)>-1 
+}
+
+export function canPlayInline(item: UploadedItem) {
+	return isImage(item) || isAudio(item);
+}
+
 export function Player({item}: {item: UploadedItem}) {
 	const [url, setUrl]= useState('');
 	useEffect( () => {
@@ -64,13 +76,13 @@ export function Player({item}: {item: UploadedItem}) {
 		{
 			url=='' ? <Button loading />
 			: (
-			 item.type=='png' ? ( //XXX: isImage(...) o "playerFor(...)"
+			isImage(item) ? ( //XXX: isImage(...) o "playerFor(...)"
 			 	<Image src={url} preview downloadable
 					alt={item.name}
 			 		imageStyle={{maxHeight: '10vh'}}
 				/> 
 			 ) :
-			 item.type=='mp3' ? (
+			 isAudio(item) ? (
 				 <audio ref={onAudioRef} controls> 
 					 <source src={url} type="audio/mp3" />
 				 </audio>

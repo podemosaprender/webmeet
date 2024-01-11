@@ -32,9 +32,21 @@ export type Topic= string;
  * A message type is required to process it
  * BUT a node may ignore (but forward) an unknown type
  *
- * XXX: declare some explicit types, but allow any
  */
 export type MessageType= string; 
+
+/**
+ *declare some explicit message types, but allow any
+ */
+export const enum StdMessageTypes {
+	Open= 'open',
+	Peer= 'peer',
+	Error= 'error',
+	Unknown= '',
+	Hello= 'hello',
+	MediaItem= 'item',
+	MediaItemPart= 'item-part',
+}
 
 /**
  * We send text messages, audio files, etc.
@@ -91,10 +103,22 @@ export class Message {
 	 * A message type is required to process it
 	 * BUT a node may ignore (but forward) an unknown type
 	 */
-	type: MessageType = ''
+	type: MessageType = StdMessageTypes.Unknown
 
 	/**
 	 * The payload is the reason to send a message!
 	 */
 	payload: MediaItemData | MediaItemDataPart | MediaItemDataFirstPart | any
+
+	/**
+	 * set values from object EXCEPT source, typesafe
+	 */
+	assign(o: Partial<Message>) {
+		Object.assign(this, o);
+	}
+
+	constructor(o: Partial<Message>= {}) {
+		this.assign(o);
+	}
 }
+
