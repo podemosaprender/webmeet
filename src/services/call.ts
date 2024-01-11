@@ -88,7 +88,7 @@ class CallMgr extends Emittery<CallMgrEvents> {
 			//XXX:SEC validations?
 			const itemData: MediaItemData= msg.payload;
 			const it: MediaItem= {... itemData,
-				blob: async () => new Blob([itemData.data]),//A: uint8array -> blobParts
+				blob: async () => new Blob(itemData.data ? [itemData.data] : undefined),//A: uint8array -> blobParts
 			}
 			this.emit('item', it);
 		} else if (msg.type == StdMessageTypes.MediaItemPart) {
