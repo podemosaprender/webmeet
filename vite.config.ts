@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { splitVendorChunkPlugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 //SEE: https://vitejs.dev/config/server-options.html#server-https
@@ -11,5 +12,6 @@ export default defineConfig({
   plugins: [
 		react(),  
 		basicSsl(), 
+		splitVendorChunkPlugin(),
 	],
 })
