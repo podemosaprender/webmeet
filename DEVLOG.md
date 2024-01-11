@@ -7,3 +7,4 @@ Outdated types replaced with `npm i -D   @types/wicg-file-system-access`
 SEE: https://www.typescriptlang.org/docs/handbook/declaration-files/consumption.html
 
 Typed Events, SEE: https://github.com/sindresorhus/emittery#readme
+SEE: https://github.com/sindresorhus/emittery/blob/main/examples/clocktyped.ts
