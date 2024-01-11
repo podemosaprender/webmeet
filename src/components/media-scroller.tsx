@@ -1,5 +1,11 @@
-/** a scrollable list of media for all views
+/** 
+ * A scrollable list of media for all views
  *
+ * <uml>
+ * Bob -> Alice: Hello
+ * </uml>
+ *
+ * @module
  */
 
 import { MediaItem } from '../types/content';
@@ -15,12 +21,15 @@ export interface MediaScrollerProps {
 	commands?: Record<string,string> //U: commandName -> icon string
 }
 
+/**
+ * @Category component
+ */
 export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scrollable list of media for all views
 	//XXX: make the player composable e.g. as a parameter {
 	const [showInPlayer, setShowInPlayer]= useState<MediaItem|null>(null);
 	// }
 
-	const scrollerRef= useRef<VirtualScroller>(null);
+	const scrollerRef= useRef<DataScroller>(null);
 
 	useEffect(() => { 
 		setTimeout( () => { //A: after the list was redrawn //XXX: don't scroll if the user scrolled manually
@@ -61,7 +70,7 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 
 	return (<>
 		{ showInPlayer!=null
-			? <Player item={showInPlayer} onClose={() => setShowInPlayer(null)} />
+			? <Player item={showInPlayer} />
 			: null
 		}
 		<DataScroller ref={scrollerRef}

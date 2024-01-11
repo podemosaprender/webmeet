@@ -1,3 +1,9 @@
+/**
+ * Play any media item
+ *
+ * @module
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 
 import { UploadedItem } from '../types/content';
