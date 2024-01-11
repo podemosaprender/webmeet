@@ -5,9 +5,6 @@
 import * as Peer from './transport/peer'; //XXX: import ONLY needed functions
 import * as IOAudio from './io/audio/index'; //XXX: import ONLY needed functions
 import { MediaItem } from '../types/content';
-import { playAudioChunks } from './io/audio/util';
-
-import { save } from './storage/browser-opfs';
 
 let emuChunks= new Array(); //XXX: must be per peer
 
@@ -54,6 +51,7 @@ class CallMgr extends EventTarget {
 		} else if (data.t=='audio-end') { //XXX: receive from multiple peers simultaneously!
 			this._onAudioEnd( emuChunks, data ); //A: don't start before previous finishes, use a queue!
 			emuChunks= new Array();
+
 		} else if (data.t=='text') {
 			const author= data.r[0];
 			const date= new Date(); //XXX: use from sender+NTP
@@ -66,6 +64,7 @@ class CallMgr extends EventTarget {
 			}
 
 			this.dispatchEvent(new CustomEvent('item',{detail: item}));
+
 		} else if (data.t=='ping') {
 			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.r.toReversed().slice(1, data.r.length));
 		} else if (data.t=='pong') {
