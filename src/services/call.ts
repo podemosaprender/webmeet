@@ -1,21 +1,47 @@
-/** Coordinate io and transports for a call
+/** 
+ * Coordinate io and transports for a call
  *
+ * only a `const` with a **SINGLETON** is exported
+ *
+ * @module
  */
 
 import * as Peer from './transport/peer'; //XXX: import ONLY needed functions
 import * as IOAudio from './io/audio/index'; //XXX: import ONLY needed functions
 import { MediaItem } from '../types/content';
 
+import Emittery from 'emittery';
+
+/** 
+ * Listen with `on` to these {@link callMgr} singleton events
+ */
+type CallMgrEvents= {
+	error: {msg: string, id: string},
+	open: undefined,
+	peer: undefined,
+	sound: undefined,
+	silence: undefined,
+	item: MediaItem
+}
+
+
 let emuChunks= new Array(); //XXX: must be per peer
 
-class CallMgr extends EventTarget {
+/**
+ * The CallMgr class extends Emittery with CallMgrEvents
+ *
+ * @see How it's used in [App.App](../functions/App.default.html)
+ */
+class CallMgr extends Emittery<CallMgrEvents> {
 	_myId= '';
 	peers: Record<string,any> = {}; //XXX: para tener lista de ids, usar setters, getters, etc.
 	routes: Array<string>[] = []; 
 
+	dispatchEvent(_:any) {} //XXX
+
 	_isOpen= false;
 	get isOpen() { return this._isOpen }
-	get events() { return ['error','open','sound','silence','peer','item']}
+	get eventNames() { return ['error','open','sound','silence','peer','item']}
 
 	async _onAudioEnd(chunks: any[], data: any) {
 		//try {save(['x1',(new Date()).toJSON()+'.mp3'], new Blob(chunks));} catch(ex) { console.log("AUDIO SAVE",ex) } //XXX: handle errors!
@@ -31,19 +57,19 @@ class CallMgr extends EventTarget {
 			name: author+'__'+date,
 			author, date,
 		}
-		this.dispatchEvent(new CustomEvent('item',{detail: item}));
+		this.emit('item', item);
 		// DRY }
 	}
 
 	_onTransportData= (data: any) => { //U: standard event handler for all transports
 		if (data.t=='open') {
 			this._isOpen= true;
-			this.dispatchEvent(new Event('open'));
+			this.emit('open');
 		} else if (data.t=='peer') {
-			this.dispatchEvent(new Event('peer'));
+			this.emit('peer');
 		} else if (data.t=='error') {
-			this.dispatchEvent(new Event('peer'));
-			this.dispatchEvent(new CustomEvent('error',{detail:{msg: String(data.err), id: (data.r||[])[0]}}) );
+			this.emit('peer');
+			this.emit('error',{msg: String(data.err), id: (data.r||[])[0]} );
 
 		} else if (data.t=='audio-chunk') { //XXX:make extensible/composable with a kv data.t => handler?
 			emuChunks.push(data.blob);
@@ -63,14 +89,14 @@ class CallMgr extends EventTarget {
 				author, date,
 			}
 
-			this.dispatchEvent(new CustomEvent('item',{detail: item}));
+			this.emit('item', item);
 
 		} else if (data.t=='ping') {
 			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.r.toReversed().slice(1, data.r.length));
 		} else if (data.t=='pong') {
 			let dt= Date.now() - data.ping_t
 			console.log('CALL pong', data.r[0],dt)	 
-			this.dispatchEvent(new CustomEvent('text', {detail: {text: `PONG ${dt}`, id: data.r[0]}}));
+//XXX			this.emit('text', {text: `PONG ${dt}`, id: data.r[0]}}));
 
 		} else if (data.t =='forward') {
 			this.sendTo(data.d, data.r, data.ri);
@@ -85,7 +111,7 @@ class CallMgr extends EventTarget {
 	_onAudioData= (e: Event) => {
 		this._audioLastIdx++;
 		this.sendToAll({t: 'audio-chunk', idx: this._audioLastIdx, blob: (e as CustomEvent).detail.blob});
-		this.dispatchEvent(new Event('sound'))
+		this.emit('sound')
 	}
 
 	_onAudioSilence=  () => {
@@ -93,7 +119,7 @@ class CallMgr extends EventTarget {
 		if (this._audioLastIdx>-1) {
 			this.sendToAll({t: 'audio-end', idx: this._audioLastIdx});
 		}
-		this.dispatchEvent(new Event('silence'))
+		this.emit('silence')
 		this._audioLastIdx= -1;
 	}
 
@@ -147,4 +173,4 @@ class CallMgr extends EventTarget {
 	}
 }
 
-export const callMgr= new CallMgr(); //A: singleton
+export const callMgr= new CallMgr({debug: { name: 'callMgr', enabled: false}}); //A: singleton
