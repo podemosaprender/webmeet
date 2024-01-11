@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  emittery:
+    specifier: ^1.0.1
+    version: 1.0.1
   eslint-plugin-react:
     specifier: ^7.33.2
     version: 7.33.2(eslint@8.56.0)
@@ -29,6 +32,9 @@ dependencies:
   react-helmet:
     specifier: ^6.1.0
     version: 6.1.0(react@18.2.0)
+  three:
+    specifier: ^0.160.0
+    version: 0.160.0
 
 devDependencies:
   '@types/react':
@@ -67,9 +73,18 @@ devDependencies:
   eslint-plugin-react-refresh:
     specifier: ^0.4.5
     version: 0.4.5(eslint@8.56.0)
+  plantuml-encoder:
+    specifier: ^1.4.0
+    version: 1.4.0
   typedoc:
     specifier: ^0.25.6
     version: 0.25.6(typescript@5.3.3)
+  typedoc-plugin-missing-exports:
+    specifier: ^2.1.0
+    version: 2.1.0(typedoc@0.25.6)
+  typedoc-plugin-replace-text:
+    specifier: ^3.2.0
+    version: 3.2.0(typedoc@0.25.6)
   typescript:
     specifier: ^5.2.2
     version: 5.3.3
@@ -1461,6 +1476,11 @@ packages:
     resolution: {integrity: sha512-sYNE3QxcDS4ANW1k4S/wWYMXjCVcFSOX3Bg8jpuMFaXt/x8JCmp0R1Xe1ZXDX4WXnSRBf+GJ/3eGWicUuQq5cg==}
     dev: true
 
+  /emittery@1.0.1:
+    resolution: {integrity: sha512-2ID6FdrMD9KDLldGesP6317G78K7km/kMcwItRtVFva7I/cSEOIaLpewaUb+YLXVwdAp3Ctfxh/V5zIl1sj7dQ==}
+    engines: {node: '>=14.16'}
+    dev: false
+
   /es-abstract@1.22.3:
     resolution: {integrity: sha512-eiiY8HQeYfYH2Con2berK+To6GrK2RxbPawDkGq4UiCQQfZHb6wX9qQqkbpPqaxQFcl8d9QzZqo0tGE0VcrdwA==}
     engines: {node: '>= 0.4'}
@@ -2594,6 +2614,10 @@ packages:
       pathe: 1.1.1
     dev: true
 
+  /plantuml-encoder@1.4.0:
+    resolution: {integrity: sha512-sxMwpDw/ySY1WB2CE3+IdMuEcWibJ72DDOsXLkSmEaSzwEUaYBT6DWgOfBiHGCux4q433X6+OEFWjlVqp7gL6g==}
+    dev: true
+
   /postcss@8.4.32:
     resolution: {integrity: sha512-D/kj5JNu6oo2EIy+XL/26JEDTlIbB8hw85G8StOE6L74RQAVVP5rej6wxCNqyMbR4RkPfqvezVbPw81Ngd6Kcw==}
     engines: {node: ^10 || ^12 || >=14}
@@ -3007,6 +3031,10 @@ packages:
   /text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
 
+  /three@0.160.0:
+    resolution: {integrity: sha512-DLU8lc0zNIPkM7rH5/e1Ks1Z8tWCGRq6g8mPowdDJpw1CFBJMU7UoJjC6PefXW7z//SSl0b2+GCw14LB+uDhng==}
+    dev: false
+
   /tinybench@2.5.1:
     resolution: {integrity: sha512-65NKvSuAVDP/n4CqH+a9w2kTlLReS9vhsAP06MWx+/89nMinJyB2icyl58RIcqCmIggpojIGeuJGhjU1aGMBSg==}
     dev: true
@@ -3094,6 +3122,22 @@ packages:
       for-each: 0.3.3
       is-typed-array: 1.1.12
     dev: false
+
+  /typedoc-plugin-missing-exports@2.1.0(typedoc@0.25.6):
+    resolution: {integrity: sha512-+1DhqZCEu7Vu5APnrqpPwl31D+hXpt1fV0Le9ycCRL1eLVdatdl6KVt4SEVwPxnEpKwgOn2dNX6I9+0F1aO2aA==}
+    peerDependencies:
+      typedoc: 0.24.x || 0.25.x
+    dependencies:
+      typedoc: 0.25.6(typescript@5.3.3)
+    dev: true
+
+  /typedoc-plugin-replace-text@3.2.0(typedoc@0.25.6):
+    resolution: {integrity: sha512-PeshV35JQersAcm9AbL3KqvdY9VZUhnIVsQ+XYIaHn7WR98INDN+QenwdpgmlKkijFOe+wsWudOs5z9RPBVpFg==}
+    peerDependencies:
+      typedoc: ^0.24.8 || 0.25.x
+    dependencies:
+      typedoc: 0.25.6(typescript@5.3.3)
+    dev: true
 
   /typedoc@0.25.6(typescript@5.3.3):
     resolution: {integrity: sha512-1rdionQMpOkpA58qfym1J+YD+ukyA1IEIa4VZahQI2ZORez7dhOvEyUotQL/8rSoMBopdzOS+vAIsORpQO4cTA==}

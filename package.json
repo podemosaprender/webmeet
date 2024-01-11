@@ -10,9 +10,10 @@
     "test": "vitest",
     "test-coverage": "vitest run --coverage",
     "build": "tsc && vite build",
-    "doc": "npx typedoc --entryPointStrategy Expand src/**"
+    "doc": "npx typedoc"
   },
   "dependencies": {
+    "emittery": "^1.0.1",
     "eslint-plugin-react": "^7.33.2",
     "peerjs": "^1.5.2",
     "primeflex": "^3.3.1",
@@ -36,7 +37,10 @@
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "plantuml-encoder": "^1.4.0",
     "typedoc": "^0.25.6",
+    "typedoc-plugin-missing-exports": "^2.1.0",
+    "typedoc-plugin-replace-text": "^3.2.0",
     "typescript": "^5.2.2",
     "vite": "^5.0.8",
     "vitest": "^1.1.1"
