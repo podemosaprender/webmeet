@@ -49,9 +49,9 @@ export function BottomControls({onCommand, callAudioEnabled, callAudioRecording}
 			<Dock model={items} 
 				position="bottom" magnification={false} className="fixed"
 				pt={{
-					menu: { class: 'p-dock-list p-1'},
-					menuitem: {class: 'p-0'},
-					action: {class: 'p-2'},
+					menu: { className: 'p-dock-list p-1'},
+					menuitem: {className: 'p-0'},
+					action: {className: 'p-2'},
 				}}
 			/>
 		</div>

@@ -58,10 +58,10 @@ export function WebMeetTerminal() {
 				welcomeMessage="WebMeet super powers!"
 				prompt=">"
 				pt={{
-					root: {class: 'h-11rem bg-gray-900 text-white border-2 border-round border-900'},
-					prompt: {class: 'text-gray-400 mr-2'},
-					command: {class: 'text-primary-300'},
-					response: {class: 'text-primary-300'}
+					root: {className: 'h-11rem bg-gray-900 text-white border-2 border-round border-900'},
+					prompt: {className: 'text-gray-400 mr-2'},
+					command: {className: 'text-primary-300'},
+					response: {className: 'text-primary-300'}
 				}}
 			/>
 		</div>
