@@ -19,6 +19,17 @@ export interface MediaItem extends UploadedItem {
 	text: string
 }
 
+export interface BoardType {
+    scene: THREE.Scene | null,
+    camera: THREE.Camera | null,
+    renderer: THREE.WebGLRenderer | null
+}
+
+export interface BoardElement {
+    id: number,
+    data: any
+}
+
 export function mkMediaItem(d: Partial<MediaItem>) {
 	const date= d.date || new Date();
 	const author= d.author || 'anon';

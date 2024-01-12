@@ -188,7 +188,7 @@ export default function App() {
 			<Helmet>
 				<title>WebMeet</title>
 			</Helmet>
-			<div className="dock-window">
+			<div className="dock-window h-full">
 				<BottomControls 
 					onCommand={ onCommand } 
 					callAudioEnabled={ callMgr.isOpen }
@@ -202,7 +202,7 @@ export default function App() {
 					: null
 				}
 
-				<div className="card">
+				<div className={`card ${view=='board' ? 'fixed':  ''}`}>
 					{ WebMeetProps.error!=''
 						? <PrimeMessage severity="error" text={WebMeetProps.error} />
 						: null

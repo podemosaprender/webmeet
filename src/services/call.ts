@@ -8,7 +8,7 @@
 
 import * as Peer from './transport/peer'; //XXX: import ONLY needed functions
 import * as IOAudio from './io/audio/index'; //XXX: import ONLY needed functions
-import { MediaItem, UploadedItem } from '../types/content';
+import { MediaItem, UploadedItem, BoardElement } from '../types/content';
 import { NodeId, Route, Message, StdMessageTypes, MediaItemDataFirstPart, MediaItemDataPart, MediaItemData } from '../types/transport';
 
 import Emittery from 'emittery';
@@ -22,7 +22,8 @@ type CallMgrEvents= {
 	peer: undefined,
 	item: MediaItem,
 	sound: undefined,
-	silence: undefined
+	silence: undefined,
+	draw: BoardElement
 }
 
 

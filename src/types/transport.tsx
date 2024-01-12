@@ -46,6 +46,7 @@ export const enum StdMessageTypes {
 	Hello= 'hello',
 	MediaItem= 'item',
 	MediaItemPart= 'item-part',
+	Draw='draw'
 }
 
 /**
