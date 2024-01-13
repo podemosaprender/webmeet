@@ -55,4 +55,7 @@ THUS we have _PacketEmitters_ and _PacketListeners_
 
 ## Future
 
+* UI language, i18m
+   * https://github.com/primefaces/primelocale
+   * https://locize.com/blog/react-i18next/#getting-started
 * https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
