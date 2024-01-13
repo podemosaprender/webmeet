@@ -17,7 +17,9 @@ export const Commands: Record<string,TCommandHandler>= {}
  * make DBG.Env and DBG.Commands available in the browser debug console
  */
 declare global { interface Window { DBG: any; } }
-window.DBG = window.DBG || {Env, Commands};
+window.DBG = window.DBG || {Env, Commands, cmd: handleCommand, _: {}};
+import * as IOScreen from './io/screen/index'; //XXX: import ONLY needed functions
+window.DBG._.IOScreen= IOScreen
 
 Commands['help']= async () => Object.keys(Commands).join(' ');
 Commands['clear']= () => null;

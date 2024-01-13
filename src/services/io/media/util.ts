@@ -1,4 +1,3 @@
-import { Commands, TEnv } from '../../terminal';
 
 /**
  * XXX:try https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Audio_codecs#amr_adaptive_multi-rate
@@ -64,5 +63,4 @@ export async function getScreenStream() {
 	return await navigator.mediaDevices.getDisplayMedia(opts)
 }
 
-Commands['media-screen']= async (env: TEnv) => { const r= await getScreenStream(); env['screen-stream']=r;  return 'see screen-stream' };
 
