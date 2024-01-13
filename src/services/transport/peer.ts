@@ -22,6 +22,7 @@ export function open(myId: string, onData: (data: any) => void) {
 		path:'/call', //U: coordinar con app.use en server!
 		secure: true,
 		debug: 3, //SEE: https://peerjs.com/docs/#peer-options-debug
+		token: `${myId}__${new Date().toJSON().slice(0,10)}` //XXX: can REUSE same id while presentin same token, use AUTH
 	});
 	console.log("PEER MY CX START");
 	_myCx.on('open', function(id) {
