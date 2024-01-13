@@ -18,8 +18,6 @@ export const Commands: Record<string,TCommandHandler>= {}
  */
 declare global { interface Window { DBG: any; } }
 window.DBG = window.DBG || {Env, Commands, cmd: handleCommand, _: {}};
-import * as IOScreen from './io/screen/index'; //XXX: import ONLY needed functions
-window.DBG._.IOScreen= IOScreen
 
 Commands['help']= async () => Object.keys(Commands).join(' ');
 Commands['clear']= () => null;
@@ -29,6 +27,7 @@ Commands['set']= async (env: TEnv, argv: string[]) => {
 	else { env[argv[1]]= argv[2]?.startsWith('$') ? env[argv[2].slice(1)] : argv[2]; }
 	return 'ok'
 };
+
 
 export async function handleCommand(text: string) {
 	const argsIndex= text.indexOf(' ');

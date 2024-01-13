@@ -4,6 +4,9 @@
  */
 import { handleCommand } from '../services/terminal';
 
+import * as IOScreen from '../services/io/screen/index'; //XXX: import ONLY needed functions, must be AFTER Commands is declared
+window.DBG._.IOScreen= IOScreen
+
 import { useEffect } from 'react'
 
 import { Terminal } from 'primereact/terminal';
