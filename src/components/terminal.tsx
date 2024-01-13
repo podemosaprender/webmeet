@@ -2,48 +2,22 @@
  * SEE: https://primereact.org/terminal/
  * XXX: implement!
  */
+import { handleCommand } from '../services/terminal';
+
 import { useEffect } from 'react'
 
 import { Terminal } from 'primereact/terminal';
 import { TerminalService } from 'primereact/terminalservice';
 
 export function WebMeetTerminal() {
-	const commandHandler = (text: string) => {
-		let response;
-		const argsIndex = text.indexOf(' ');
-		const command = argsIndex !== -1 ? text.substring(0, argsIndex) : text;
-
-		switch (command) {
-			case 'date':
-				response = 'Today is ' + new Date().toDateString();
-			break;
-
-			case 'greet':
-				response = 'Hola ' + text.substring(argsIndex + 1) + '!';
-			break;
-
-			case 'random':
-				response = Math.floor(Math.random() * 100);
-			break;
-
-			case 'clear':
-				response = null;
-			break;
-
-			default:
-				response = 'Unknown command: ' + command;
-			break;
-		}
-
-		if (response)
-			TerminalService.emit('response', response);
-		else
-			TerminalService.emit('clear');
+	const commandHandler= async (text: string) => {
+		const response=  await handleCommand(text)
+		if (response) { TerminalService.emit('response', response); 
+		} else { TerminalService.emit('clear'); }
 	};
 
 	useEffect(() => {
 		TerminalService.on('command', commandHandler);
-
 		return () => {
 			TerminalService.off('command', commandHandler);
 		};
@@ -52,7 +26,7 @@ export function WebMeetTerminal() {
 	return (
 		<div className="card">
 			<p>
-				Enter "<strong>date</strong>" to display the current date, "<strong>greet {'{0}'}</strong>" for a message, "<strong>random</strong>" to get a random number and "<strong>clear</strong>" to clear all commands.
+				Enter "<strong>help</strong>", "<strong>see</strong>" or "<strong>clear</strong>"
 			</p>
 			<Terminal
 				welcomeMessage="WebMeet super powers!"

@@ -11,7 +11,7 @@ export interface UploadedItem {
 	blob: () => Promise<Blob>
 }
 
-/** e.g. a message received 
+/** a message with just text, an image, file, board drawing
 */
 export interface MediaItem extends UploadedItem {
 	author: string,

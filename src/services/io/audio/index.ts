@@ -5,49 +5,12 @@ SEE: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia
 
  */
 
-import { AUDIO_SETTINGS, getAudioBlob, getAudioURL } from './util';
+import { AUDIO_SETTINGS, getMediaStreams } from '../media/util';
+import { getAudioBlob, getAudioURL } from './util';
 import { SilenceDetector } from './silence-detector';
 
 //S: Move to Library {
 // }
-
-/**
- * @group: Navigator API
- * SEE: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#browser_compatibility
-*/
-
-/**
- * compute the best options for required mediaStreams (pure)
- */
-function getMediaStreamsOpts(wantsVideo=false) {
-	let opts: any= { 
-		audio: {}, 
-		video: { width: 320, }, 
-	};
-
-	const supported_constraints= navigator.mediaDevices.getSupportedConstraints();
-	//XXX: type: if (supported_constraints.channelCount) { opts.audio.channelCount= AUDIO_SETTINGS.channels; }
-	if (supported_constraints.echoCancellation) { opts.audio.echoCancellation= true ; }
-	if (supported_constraints.sampleSize) { opts.audio.sampleSize= AUDIO_SETTINGS.sampleSize; }
-	if (supported_constraints.sampleRate) { opts.audio.sampleRate= { ideal: AUDIO_SETTINGS.sampleRate}; }
-	if (supported_constraints.noiseSuppression) { opts.audio.noiseSuppression = true; }
-	//A: audio configured
-
-	if (!wantsVideo) { opts.video= false; }
-	else {
-		if (supported_constraints.frameRate) { opts.video.frameRate= 1; } //XXX:CFG
-	}
-	//A: video configured
-	//A: video and audio configured
-	console.log("AUDIO getMediaStreams", {opts, supported_constraints});
-
-	return opts;
-}
-
-function getMediaStreams(wantsVideo: boolean) {
-	const opts= getMediaStreamsOpts(wantsVideo);
-	return navigator.mediaDevices.getUserMedia(opts); 
-}
 
 //S: media recorder
 		//SEE: https://github.com/mdn/dom-examples/tree/main/media/web-dictaphone
