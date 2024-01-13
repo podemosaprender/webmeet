@@ -1,5 +1,5 @@
 coverage/*
-public/docs/*
+public/doc/*
 
 # Logs
 logs

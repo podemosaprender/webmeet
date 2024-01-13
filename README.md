@@ -2,7 +2,8 @@
 
 videocall / videoconference / screen sharing / voice chat
 
-try the last build at https://viejo.podemosaprender.org/webmeet/
+* try the last build at https://viejo.podemosaprender.org/webmeet/
+* see the documentation at https://viejo.podemosaprender.org/webmeet/doc/
 
 ## Design Goals
 

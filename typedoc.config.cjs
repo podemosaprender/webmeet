@@ -4,7 +4,7 @@ plantumlEncoder= require('plantuml-encoder');
 
 /** @type { import('typedoc').TypeDocOptionMap & import('typedoc-plugin-replace-text').Config } */
 module.exports = {
-	out: "public/docs", //A: during dev to see the docs on the same server
+	out: "public/doc", //A: during dev to see the docs on the same server
 	readme: "README.md",
 	entryPoints: ["src/**"],
 	entryPointStrategy: "expand",

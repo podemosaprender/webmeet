@@ -10,7 +10,8 @@
     "test": "vitest",
     "test-coverage": "vitest run --coverage",
     "build": "tsc && vite build",
-    "doc": "npx typedoc"
+    "doc": "npx typedoc",
+    "build-and-doc": "npm run doc && npm run build"
   },
   "dependencies": {
     "emittery": "^1.0.1",
