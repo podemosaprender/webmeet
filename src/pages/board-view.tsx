@@ -85,7 +85,7 @@ export function BoardView() {
                     }
                 };
                 console.log("ADDING CUBE");
-                callMgr.sendToAll({t:'draw', elem:element});
+//                callMgr.sendToAll({t:'draw', elem:element});
                 boardAddElement(currentBoard, element);
             break;
         }
@@ -93,9 +93,9 @@ export function BoardView() {
 
     useEffect(() => {
         currentBoard = start3DScene(refContainer.current as HTMLElement)
-        callMgr.on('draw', (element: BoardElement) => {
-            boardAddElement(currentBoard, element);
-        });
+//        callMgr.on('draw', (element: BoardElement) => {
+//            boardAddElement(currentBoard, element);
+//       });
     }, []);
 
     return (
