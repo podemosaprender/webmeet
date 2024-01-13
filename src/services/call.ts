@@ -1,7 +1,7 @@
 /** 
  * Coordinate io and transports for a call
  *
- * only a `const` with a **SINGLETON** is exported
+ * only a `const` with the {@link callMgr} **SINGLETON** is exported
  *
  * @module
  */
@@ -18,32 +18,100 @@ import Emittery from 'emittery';
  */
 type CallMgrEvents= {
 	error: Message,
+
+	/** 
+	 * Our [node](XXX:DOC:NODE) is ready to receive and send {@link @MediaItem} 
+	 */
 	open: undefined,
+
+	/** 
+	 * A connection is established with other  [node](XXX:DOC:NODE)
+	 */
 	peer: undefined,
+
+	/** 
+	 * when a MediaItem is received from others or our own [node](XXX:DOC)
+	 */
 	item: MediaItem,
+
+	/**
+	 * mic recording is on and sound is detected
+	 */
 	sound: undefined,
+	/**
+	 * mic recording is on and silence is detected
+	 */
 	silence: undefined,
-	draw: BoardElement
 }
 
 
 let emuIdToChunks: Record<string,MediaItemDataPart[]>= {}; //XXX: must be per peer
 
 /**
- * The CallMgr class extends Emittery with CallMgrEvents
+ * The CallMgr class extends Emittery with {@link CallMgrEvents}
  *
  * @see How it's used in [App.App](../functions/App.default.html)
  *
  * XXX: inject dependencies eg transports, message handlers, etc.
+ *
+ * @category net
+ *
  */
 class CallMgr extends Emittery<CallMgrEvents> {
-	_myId= '';
+	/**
+	 * The @NodeId used to identify this node to other nodes
+	 *
+	 * XXX: allow UserId to be != NodeId to be != TransportId
+	 * so I can be MauricioCap in my mobile and PC
+	 * using websockets in one and WebRTC on the other
+	 *
+ 	 * @category net
+	 */
+	get myId() { return this._myId }
+	private _myId: NodeId= '';
+
+	/**
+	 * Are we ready to receive and send @MediaItem
+ 	 * @category net
+		*/
+	get isOpen() { return this._isOpen }
+	private _isOpen= false;
+
+	/**
+	 * Set the XXX:UserId and connect to available transports
+	 *
+	 * @category net
+	 */
+	connectAs(myId: string) {
+		Peer.open(myId, this._onTransportMsg);
+		this._myId= myId;
+	}
+
+	/**
+	 * Routes we send to
+	 *
+	 * XXX: encapsulate in a method
+	 * XXX: let peers / signaling server coordinate routes, forwarding, etc
+	 *
+	 * @category net
+	 */
 	routes: Route[] = []; 
 
-	_isOpen= false;
-	get isOpen() { return this._isOpen }
-
-	_onTransportMsg= async (msg: Message) => { //U: standard event handler for all transports
+	//S: Transport /////////////////////////////////////////////
+	
+	/**
+	 * Transport implementations send recieved messages to this callback.
+	 *
+	 * Some message types may be ignored.
+	 *
+	 * XXX: reimplement `forward` and `ping` with the new {@link Message} format.
+	 *
+	 *    * Make `forward` independent of the packet type
+	 *    * Replace `ping` with a flag to make receivers/forwarders to add a timestamp to the data
+	 *
+	 * @category net
+	 */
+	private _onTransportMsg= async (msg: Message) => { //U: standard event handler for all transports
 		if (msg.type == StdMessageTypes.Open) {
 			this._isOpen= true;
 			this.emit('open');
@@ -54,36 +122,17 @@ class CallMgr extends Emittery<CallMgrEvents> {
 			this.emit('error', msg );
 /*
 		} else if (data.t =='forward') {
-			this.sendTo(data.d, data.r, data.ri);
+			this._sendTo(data.d, data.r, data.ri);
 			console.log("forwarding message", data);
 			//this._onTransportMsg(data.d); //XXX:@Maxi why?
 
 		} else if (data.t=='ping') {
-			this.sendTo({...data, t: 'pong', pong_t: Date.now()}, data.r.toReversed().slice(1, data.r.length));
+			this._sendTo({...data, t: 'pong', pong_t: Date.now()}, data.r.toReversed().slice(1, data.r.length));
 		} else if (data.t=='pong') {
 			let dt= Date.now() - data.ping_t
 			console.log('CALL pong', data.r[0],dt)	 
 //XXX			this.emit('text', {text: `PONG ${dt}`, id: data.r[0]}}));
 
-		} else if (data.t=='audio-chunk') { //XXX:make extensible/composable with a kv data.t => handler?
-			emuChunks.push(data.blob);
-			//XXX: @Maxi se puede reproducir de a uno? playAudioChunks(emuChunks.length>1 ? [emuChunks[0],data.blob] : emuChunks);
-		} else if (data.t=='audio-end') { //XXX: receive from multiple peers simultaneously!
-			this._onAudioEnd( emuChunks, data ); //A: don't start before previous finishes, use a queue!
-			emuChunks= new Array();
-
-		} else if (data.t=='text') {
-			const author= data.r[0];
-			const date= new Date(); //XXX: use from sender+NTP
-			const item: MediaItem= {
-				type: 'text',
-				text: data.text,
-				blob: async () => (new Blob([data.text])),
-				name: author+'__'+date,
-				author, date,
-			}
-
-			this.emit('item', item);
 */
 		} else if (msg.type == StdMessageTypes.MediaItem) {
 			//XXX:SEC validations?
@@ -125,12 +174,8 @@ class CallMgr extends Emittery<CallMgrEvents> {
 		}
 	}
 
-	connectAs(myId: string) {
-		Peer.open(myId, this._onTransportMsg);
-		this._myId= myId;
-	}
 
-	sendTo(data: any, route: string[], currentPeerIndex: number = 0) {
+	private _sendTo(data: any, route: string[], currentPeerIndex: number = 0) {
 		let packetRoute = (currentPeerIndex == 0) ? [this._myId, ...route] : route;
 		let nextPeerIndex = currentPeerIndex+1;
 		let dataToSend: any;
@@ -147,10 +192,18 @@ class CallMgr extends Emittery<CallMgrEvents> {
 		Peer.send(dataToSend, packetRoute[nextPeerIndex], this._onTransportMsg);
 	}
 
-	sendToAll(data: any) {
-		this.routes.forEach( route => this.sendTo(data, route) );
+	private _sendToAll(data: any) {
+		this.routes.forEach( route => this._sendTo(data, route) );
 	}
 
+	/**
+	 * send a {@link MediaItem} to all connected peers including myself
+	 *
+	 * peers get the item listening to `callMgr.on('item', (it: MediaItem) => ...`
+	 *
+	 * @category net
+	 *
+	 */
 	async sendItemToAll(item: MediaItem) {
 		const blob= await item.blob();
 		const msg= new Message();
@@ -164,24 +217,29 @@ class CallMgr extends Emittery<CallMgrEvents> {
 			text: item.text,
 			data: blob, 
 		} as MediaItemData;
-		this.sendToAll(msg);
-	}
-
-	ping(peerId: NodeId) {
-		this.sendTo({t:'ping', ping_t: Date.now()}, [peerId]);
-	}
-
-	pingAll() {
-		this.routes.forEach( route => this.sendTo({t:'ping', ping_t: Date.now()}, route));
+		this._sendToAll(msg);
 	}
 
 	/**
-		* audio source / mic event handling
-	*/
-	_audioLastId= 0;
-	_audioLastIdx= -1;
-	_audioLastDate= new Date()
-	_onAudioData= (e: Event) => {
+	 * @category net
+	 */
+	ping(peerId: NodeId) {
+		this._sendTo({t:'ping', ping_t: Date.now()}, [peerId]);
+	}
+
+	/**
+	 * @category net
+	 */
+	pingAll() {
+		this.routes.forEach( route => this._sendTo({t:'ping', ping_t: Date.now()}, route));
+	}
+
+	//S: AUDIO /////////////////////////////////////////////////
+	// audio source / mic event handling
+	private _audioLastId= 0;
+	private _audioLastIdx= -1;
+	private _audioLastDate= new Date()
+	private _onAudioData= (e: Event) => {
 		this._audioLastIdx++;
 		const payload: MediaItemDataPart= (
 	 		(this._audioLastIdx==0)
@@ -200,7 +258,7 @@ class CallMgr extends Emittery<CallMgrEvents> {
 			}
 		)
 
-		this.sendToAll(new Message({
+		this._sendToAll(new Message({
 			source: this._myId,
 			type: StdMessageTypes.MediaItemPart,
 			topics: ['mic'],
@@ -210,7 +268,7 @@ class CallMgr extends Emittery<CallMgrEvents> {
 		this.emit('sound')
 	}
 
-	_onAudioSilence=  () => {
+	private _onAudioSilence=  () => {
 		console.log("onAudioSilence");
 		if (this._audioLastIdx>-1) {
 			const payload: MediaItemDataPart = {
@@ -219,7 +277,7 @@ class CallMgr extends Emittery<CallMgrEvents> {
 				isLastPart: true
 			}
 
-			this.sendToAll(new Message({
+			this._sendToAll(new Message({
 				source: this._myId,
 				type: StdMessageTypes.MediaItemPart,
 				topics: ['mic'],
@@ -233,7 +291,9 @@ class CallMgr extends Emittery<CallMgrEvents> {
 	}
 
 	/**
-		* Turn on audio recording and sending
+	* Turn on audio recording and sending
+	*
+	* @category audio-mic
 	*/
 	async audioOn(wantsSilenceDetector=true) {
 		IOAudio.getMicAudioEmitter().addEventListener('data',this._onAudioData);
@@ -243,7 +303,9 @@ class CallMgr extends Emittery<CallMgrEvents> {
 	}
 
 	/**
-		* Turn off audio recording and sending
+	* Turn off audio recording and sending
+	*
+	* @category audio-mic
 	*/
 	async audioOff() {
 		const r= await IOAudio.getMicAudioEmitter().stop();
@@ -253,4 +315,15 @@ class CallMgr extends Emittery<CallMgrEvents> {
 	}
 }
 
+/**
+ * The `callMgr` **SINGLETON** is the single point to
+ *
+ *    * control mic recording and sending
+ *    * control all network transports: WebRTC, WebSockets, etc.
+ *    * [sendItemToAll](../classes/services_call._internal_.CallMgr.html#sendItemToAll) peers
+ *    * receive {@link MediaItem} s subscribing to `callMgr.on('item', (it: MediaItem) => ...`
+ *
+ * @category net
+ *
+ */
 export const callMgr= new CallMgr({debug: { name: 'callMgr', enabled: false}}); //A: singleton

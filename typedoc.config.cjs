@@ -4,14 +4,15 @@ plantumlEncoder= require('plantuml-encoder');
 
 /** @type { import('typedoc').TypeDocOptionMap & import('typedoc-plugin-replace-text').Config } */
 module.exports = {
-	out: "docs",
+	out: "public/docs", //A: during dev to see the docs on the same server
 	readme: "README.md",
 	entryPoints: ["src/**"],
 	entryPointStrategy: "expand",
 	excludeNotDocumented: false,
 	tsconfig: "tsconfig.json",
 	useTsLinkResolution: true,
-	categorizeByGroup: true,
+	categorizeByGroup: false, //A: keep items of the same category together
+	sort: ["source-order"], //SEE: https://typedoc.org/options/organization/#sort
 	plugin: [
 		"typedoc-plugin-missing-exports",
 		"typedoc-plugin-replace-text",

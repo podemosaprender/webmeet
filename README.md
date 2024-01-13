@@ -19,7 +19,8 @@ We use
 
 * https://github.com/peers/peerjs#data-connections
 * https://vitejs.dev/guide/ with ```pnpm create vite --template react-ts```
-* https://primereact.org/button/ and other components
+* [PrimeReact UI Components](https://primereact.org/button/)
+* [PrimeFlex styles](https://primeflex.org/installation)
 * https://vitest.dev/guide/#writing-tests
 
 For QA+CI use
@@ -28,6 +29,8 @@ For QA+CI use
 * ```npm run test```
 * ```npm run test-coverage```
 * ```npm run doc```
+
+Documentation is deployed under the `public` folder so it's visible on gitpages
 
 ### Diagnostics and debugging
 
@@ -52,4 +55,3 @@ THUS we have _PacketEmitters_ and _PacketListeners_
 ## Future
 
 * https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
-* https://typedoc.org/example/
