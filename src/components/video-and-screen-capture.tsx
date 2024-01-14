@@ -102,7 +102,7 @@ export function VideoAndScreenCaptureDialog(props: VideoAndScreenCaptureDialogPr
 			}
 			</div>
 			<div>
-				<MyInput id="name" value={name} setValue={setName}/>
+				<MyInput id="name" value={name} setValue={setName} onEnter={onNewSource}/>
 				<Button aria-label="add screen" icon="pi pi-external-link" onClick={onNewSource}/>
 			</div>
 		</Dialog>

@@ -44,7 +44,7 @@ export function RoomView(props: RoomViewProps) {
 		<div className="flex flex-column gap-2" style={{height: '80vh'}}>
 			<div className="card flex flex-column sm:flex-row gap-3 flex-none">
 				<div className="p-inputgroup flex-auto">
-					<MyInput id="PeerIds" value={props.peerId} setValue={props.setPeerId} />
+					<MyInput id="PeerIds" value={props.peerId} setValue={props.setPeerId} onEnter={props.mySend} />
 					<Button icon="pi pi-users" onClick={props.mySend} />
 				</div>
 
