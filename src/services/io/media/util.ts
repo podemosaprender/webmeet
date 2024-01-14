@@ -59,7 +59,7 @@ export function getMediaStreams(wantsVideo: boolean) {
  * **USE** high-level functions at [io/screen](XXX:LINK)
  */
 export async function getScreenStream() {
-	let opts= getMediaStreamsOpts(true, { video: { width: { max: 720, }, } });
+	let opts= getMediaStreamsOpts(true, { video: { width: { max: 1440, }, } }); //XXX:CFG
 	return await navigator.mediaDevices.getDisplayMedia(opts)
 }
 

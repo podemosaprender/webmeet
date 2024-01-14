@@ -17,7 +17,7 @@ export { getScreenStream } from '../media/util';
  * XXX: quality, size, region options
  */
 export async function videoElToCanvas(v: HTMLVideoElement, canvas: HTMLCanvasElement | null) {
-	const w=300; const h=300;  //XXX:params
+	const w= v.width || 300; const h= v.height || 300;  //XXX:params
 	const canvasOk = canvas || document.createElement('canvas');
 	canvasOk.width  = w; canvasOk.height = h;
 	const ctx= canvasOk.getContext('2d');
@@ -38,14 +38,31 @@ export async function canvasToDataURL(canvas: HTMLCanvasElement) {
 	return canvas.toDataURL();
 }
 
+/**
+ * get width, height, etc. from a (video) MediaStream
+ */
+export function streamVideoProps(st: MediaStream) {
+	const r= { isVideo: false, width: 0, height: 0 } //DFLT, it's not video
+	const videoTrack= st.getVideoTracks()[0];
+	if (videoTrack) {
+		const settings= videoTrack.getSettings()
+		r.isVideo= true;
+		r.width= settings.width || 0;
+		r.height= settings.height || 0;
+	}
+	return r;
+}
 
 /**
  * Connect a MediaStream to a <video> element. The element is created if null.
  * @category io-video
  */
 export async function streamPlayOnVideoEl(st: MediaStream, v: HTMLVideoElement | null) {
+	const vProps= streamVideoProps(st);
 	const vOk= v || document.createElement('video');
-	vOk.height= 300; vOk.width= 300; //XXX: use from stream
+	vOk.height= vOk.height || vProps.height || 300; 
+	vOk.width= vOk.width || vProps.width || 300; 
+
 	vOk.srcObject= st;
 	await new Promise( (onOk) => {
 		vOk.onloadedmetadata = (_: Event) => { vOk.play(); onOk(true) };
