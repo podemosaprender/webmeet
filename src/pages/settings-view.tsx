@@ -17,7 +17,7 @@ export function SettingsView(props: SettingsViewProps) {
 	return (<>
 		<div className="card flex flex-column md:flex-row gap-3">
 				<div className="p-inputgroup flex-1">
-					<MyInput id="MyId" value={props.myId} setValue={props.setMyId} />
+					<MyInput id="MyId" value={props.myId} setValue={props.setMyId} onEnter={props.myConnect} />
 					<Button icon="pi pi-user" onClick={props.myConnect} outlined={ props.isOpen }/>
 				</div>
 		</div>

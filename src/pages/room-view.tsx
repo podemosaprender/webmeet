@@ -72,10 +72,10 @@ export function RoomView(props: RoomViewProps) {
 
 			<div className="card flex flex-column md:flex-row gap-3 flex-none">
 				<div className="p-inputgroup flex-1">
-					<MyInput id="msg" value={props.msg} setValue={props.setMsg}/>
-					<Button icon="pi pi-caret-right" onClick={() => props.mySend(props.msg)} />
-					<Button className="m-1" aria-label="upload" icon="pi pi-upload" onClick={() => setWantsUpload(true)} />
-					<Button className="m-1" aria-label="screen capture" icon="pi pi-external-link" onClick={() => setWantsCapture(true)} />
+					<MyInput id="msg" value={props.msg} setValue={props.setMsg} onEnter={() => props.mySend(props.msg)}/>
+					<Button className="m-0" aria-label="send text" icon="pi pi-caret-right" onClick={() => props.mySend(props.msg)} />
+					<Button className="m-0" aria-label="upload" icon="pi pi-upload" onClick={() => setWantsUpload(true)} />
+					<Button className="m-0" aria-label="screen capture" icon="pi pi-external-link" onClick={() => setWantsCapture(true)} />
 				</div>
 			</div>
 		</div>
