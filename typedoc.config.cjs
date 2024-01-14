@@ -13,6 +13,19 @@ module.exports = {
 	useTsLinkResolution: true,
 	categorizeByGroup: false, //A: keep items of the same category together
 	sort: ["source-order"], //SEE: https://typedoc.org/options/organization/#sort
+	visibilityFilters: {
+		protected: false,
+		private: false,
+		inherited: true,
+		external: false,
+		"@alpha": false,
+		"@beta": false
+	},
+	navigation: {
+		includeCategories: false,
+		includeGroups: false,
+		includeFolders: true
+	},
 	plugin: [
 		"typedoc-plugin-missing-exports",
 		"typedoc-plugin-replace-text",
@@ -24,15 +37,15 @@ module.exports = {
 		replacements: [
 			{
 				pattern: /<uml>([^]*?)<\/uml>/,
-				flags: "gi",
-				replace: (_, uml) => {
-					return (
+					flags: "gi",
+					replace: (_, uml) => {
+						return (
 						"\n\n![diagram](https://www.plantuml.com/plantuml/png/" + 
-						plantumlEncoder.encode("!theme cyborg-outline\n"+uml) + 
-						")\n\n"
+							plantumlEncoder.encode("!theme cyborg-outline\n"+uml) + 
+							")\n\n"
 					);
-				},
-			},
-		],
-	},
-};
+					},
+					},
+					],
+					},
+					};

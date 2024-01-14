@@ -1,5 +1,7 @@
 coverage/*
 public/doc/*
+src/1ReadMe
+docs/docs
 
 # Logs
 logs
