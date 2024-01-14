@@ -7,6 +7,7 @@ import { MediaItem } from '../types/content';
 
 import { MediaScroller } from '../components/media-scroller';
 import { FileUploadDialog } from '../components/file-upload';
+import { VideoAndScreenCaptureDialog } from '../components/video-and-screen-capture';
 
 import { MyInput } from '../components/prototyping';
 import { Button } from 'primereact/button';
@@ -26,11 +27,18 @@ interface RoomViewProps {
 
 export function RoomView(props: RoomViewProps) {
 	const [wantsUpload, setWantsUpload]= useState(false);
+	const [wantsCapture, setWantsCapture]= useState(false);
+
 	return (<>
 		<FileUploadDialog 
 			header={'Upload to peers'}
 			onFileUploaded={async (f: File) => {props.mySend(f); return true}}
 			visible={wantsUpload} onClose={() => {setWantsUpload(false)}}
+		/>
+		<VideoAndScreenCaptureDialog 
+			onCaptured={async (b: Blob) => {props.mySend(b); return true}}
+			visible={wantsCapture} onClose={() => {setWantsCapture(false)}}
+			wantsAutoRefresh={true}
 		/>
 
 		<div className="flex flex-column gap-2" style={{height: '80vh'}}>
@@ -67,6 +75,7 @@ export function RoomView(props: RoomViewProps) {
 					<MyInput id="msg" value={props.msg} setValue={props.setMsg}/>
 					<Button icon="pi pi-caret-right" onClick={() => props.mySend(props.msg)} />
 					<Button className="m-1" aria-label="upload" icon="pi pi-upload" onClick={() => setWantsUpload(true)} />
+					<Button className="m-1" aria-label="screen capture" icon="pi pi-external-link" onClick={() => setWantsCapture(true)} />
 				</div>
 			</div>
 		</div>

@@ -37,7 +37,7 @@ async function PlayQueueAdd(playFn: PlayFn) { //XXX:move to module, coordinate q
 }
 
 export function isImage(item: UploadedItem) { 
-	return ['png','jpg','svg'].indexOf(item.type)>-1 
+	return item.type.startsWith('image/') || ['png','jpg','svg'].indexOf(item.type)>-1 
 }
 
 export function isAudio(item: UploadedItem) { 

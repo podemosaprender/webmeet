@@ -9,75 +9,143 @@
 import { getScreenStream } from '../media/util';
 export { getScreenStream } from '../media/util';
 
-const Streams: Record<string, MediaStream>= {};
+//S: utils /////////////////////////////////////////////////
 
-/* 
-	.then(s =>{
-		var video = document.querySelector('#mivideo');
-		video.srcObject = s;
-		video.onloadedmetadata = (e) => { video.play(); };
+/**
+ * Capture a video element on a canvas element, created if null
+ *
+ * XXX: quality, size, region options
+ */
+export async function videoElToCanvas(v: HTMLVideoElement, canvas: HTMLCanvasElement | null) {
+	const w=300; const h=300;  //XXX:params
+	const canvasOk = canvas || document.createElement('canvas');
+	canvasOk.width  = w; canvasOk.height = h;
+	const ctx= canvasOk.getContext('2d');
+	if (ctx) { ctx.drawImage(v, 0, 0, w, h); }
+	else { console.log("SCREEN ERROR ctx 2d") }
+	return canvasOk;
+}
+
+export async function canvasToBlob(canvas: HTMLCanvasElement) {
+	const blob= await new Promise<Blob|null>( (onOk) => canvas.toBlob(b => onOk(b)));
+	return blob;
+}
+
+/**
+ * XXX: quality, size, region options
+ */
+export async function canvasToDataURL(canvas: HTMLCanvasElement) {
+	return canvas.toDataURL();
+}
+
+
+/**
+ * Connect a MediaStream to a <video> element. The element is created if null.
+ * @category io-video
+ */
+export async function streamPlayOnVideoEl(st: MediaStream, v: HTMLVideoElement | null) {
+	const vOk= v || document.createElement('video');
+	vOk.height= 300; vOk.width= 300; //XXX: use from stream
+	vOk.srcObject= st;
+	await new Promise( (onOk) => {
+		vOk.onloadedmetadata = (_: Event) => { vOk.play(); onOk(true) };
 	});
-*/
+	return vOk;
+}
+
+//S: Class for cache and lazy init /////////////////////////
+/**
+ * a SourceData class to lazy initialize and cache captured data
+ *
+ * @categoty io-video
+ *
+ */
+class SourceData {
+	constructor(
+		readonly st: MediaStream,
+		private _video_el: HTMLVideoElement | null = null,
+		private _canvas_el: HTMLCanvasElement | null = null,
+		private _capture_dataUrl: string= '',
+		private _capture_time: number= 0
+ ) {}
+
+	/**
+	 * videoEl playing the stream, cached and lazy initialized
+	 */
+	async getVideoEl() {
+		this._video_el= this._video_el || await streamPlayOnVideoEl(this.st, this._video_el);
+		return this._video_el!;
+	}
+
+	/**
+	 * canvasEl capturing the stream, cached and lazy initialized
+	 */
+	async getCanvasEl() {
+		this._canvas_el= await videoElToCanvas( await this.getVideoEl() , this._canvas_el)
+		return this._canvas_el!
+	}
+
+	/**
+	 * capture and return DataURL limiting capture frequency
+	 */
+	async getDataURL(maxAgeMiliseconds= 2000) {
+		if (this._capture_dataUrl=='' || this._capture_time< Date.now()-maxAgeMiliseconds) {
+			this._capture_dataUrl= await canvasToDataURL( await this.getCanvasEl() );
+			this._capture_time= Date.now();
+		}
+		return this._capture_dataUrl;
+	}
+}
+
+
+const Sources: Record<string, SourceData>= {};
+
+export function sources() {
+	return Object.keys(Sources);
+}
+
+export async function sourceGetOrOpen(name: string) {
+	let src= Sources[name];
+	if (src==null) {
+		src= new SourceData(await getScreenStream()); //XXX:error?
+		Sources[name]= src;
+
+		const track0= src.st.getVideoTracks()[0];
+		if (track0!=undefined) { //XXX: error?
+			track0.onended= () => { 
+				delete Sources[name]; 
+				console.log("SCREEN XXX: event! onended",name);
+			}
+		}
+	}
+	return src!;
+}
+
+export async function sourceClose(name: string) {
+	Sources[name]?.st.getVideoTracks()[0]?.stop(); //A: if was open
+	delete Sources[name];
+}
+
+export async function sourceCapture(name: string) {
+	const src= await sourceGetOrOpen(name);
+	return src.getDataURL()
+}
 
 //XXX: guard with if for dead code elimination
 import { Commands, TEnv } from '../../terminal';
 Commands['media-screen']= async (env: TEnv, argv: string[]) => { 
 	const name= argv[1] || 'dflt';
-	const st= await getScreenStream(); //XXX:error?
-
-	Streams[name]?.getVideoTracks()[0]?.stop(); //A: if was open
-	Streams[name]= st;
-	const track0= st.getVideoTracks()[0];
-	if (track0!=undefined) { //XXX: error?
-		track0.onended= () => { 
-			delete Streams[name]; 
-			console.log("SCREEN XXX: event! onended",name);
-		}
-	}
-
-	env['screen-stream-'+name]= st;  
-	return 'see screen-stream-'+name 
+	await sourceGetOrOpen(name);
+	env['screen-sources']= Sources;  
+	return 'see screen-sources';
 };
-
-const Capture= async (env: TEnv) => {
-	let v= env['media-v'];
-	const w=300; const h=300;  //XXX:params
-	const canvas = document.createElement('canvas');
-	canvas.width  = w;
-	canvas.height = h;
-	const ctx= canvas.getContext('2d');
-	if (ctx) { ctx.drawImage(v, 0, 0, w, h); }
-	else { console.log("SCREEN ERROR ctx 2d") }
-
-	env['cnv']= canvas;
-
-	const blob= await new Promise<Blob|null>( (onOk) => canvas.toBlob(b => onOk(b)));
-	if (blob) {
-		env['b']= blob;
-		const url= URL.createObjectURL(blob);
-		window.open(url,'capture');
-	}
-	return 'window should open';
-}
-
-Commands['media-screen-capturev']= Capture;
 
 Commands['media-screen-capture']= async (env: TEnv, argv: string[]) => { 
 	const name= argv[1] || 'dflt';
-	const st= Streams[name];
-	
-	let v= env['media-v'];
-	if (v==null) {
-		v= document.createElement('video');
-		v.height= 300; v.width= 300; //XXX: use from stream
-		env['media-v']= v;
-	}
+	const src= await sourceGetOrOpen(name);
+	env['screen-sources']= Sources;
 
-	v.srcObject= st;
-	await new Promise( (onOk) => {
-		v.onloadedmetadata = (_: Event) => { v.play(); onOk(true) };
-	});
-
-	return await Capture(env);
+	const url= await src.getDataURL()
+	window.open(url, 'capture');
+	return 'window should open';	
 }
-console.log(Object.keys(Commands));

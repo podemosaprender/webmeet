@@ -95,15 +95,16 @@ export default function App() {
 			//A: update routes
 			
 			const isFile= cont instanceof File;
+			const isBlob= cont instanceof Blob;
 
 			const it= mkMediaItem({
-				type: isFile ? fileExtension(cont.name) : 'text',
+				type: (isFile ? fileExtension(cont.name) : isBlob ? cont.type : null) || 'text',
 				author: myId,
-				text: isFile ? cont.name : cont+'',
-				blob: isFile ? async () => cont : undefined,
+				text: isFile ? cont.name : cont+'', //XXX:use parameters!
+				blob: (isFile || isBlob) ? async () => cont : undefined,
 			});
 			callMgr.sendItemToAll(it);
-			WebMeetProps.addItem(it);
+			WebMeetProps.addItem(it); //XXX:emit in callMgr instead!
 			setError('');
 			setMsg('');
 			return true; 

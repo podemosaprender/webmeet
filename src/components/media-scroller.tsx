@@ -40,6 +40,7 @@ export function MediaScroller(props: MediaScrollerProps) { //XXX: unify a scroll
 	const itemTemplate = (item: MediaItem) => {
 		const needsPlayer= item.type!=null && item.type!='text'; //XXX: length?
 		const playInline= canPlayInline(item);
+		console.log("MEDIA-SCROLLER canPlayInline",canPlayInline(item),item.type);
 		const cmdButtons= [];
 		for (let cmd in props.commands) { 
 			cmdButtons.push(
