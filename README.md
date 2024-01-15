@@ -55,6 +55,7 @@ THUS we have _PacketEmitters_ and _PacketListeners_
 
 ## Future
 
+* Signaling, fork and adapt https://github.com/peers/peerjs-server/ 
 * UI language, i18m
    * https://github.com/primefaces/primelocale
    * https://locize.com/blog/react-i18next/#getting-started

@@ -10,7 +10,7 @@
     "test": "vitest",
     "test-coverage": "vitest run --coverage",
     "build": "tsc && vite build",
-    "doc": "(cd src; ln -s ../docs 1ReadMe) && npx typedoc",
+    "doc": "(cd src; ln -sf ../docs 1ReadMe) && npx typedoc",
     "build-and-doc": "npm run doc && npm run build"
   },
   "dependencies": {
