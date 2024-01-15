@@ -195,6 +195,7 @@ class CallMgr extends Emittery<CallMgrEvents> {
 	}
 
 	private _sendToAll(data: any) {
+		this._onTransportMsg(data) //A: all means ourselves too!
 		this.routes.forEach( route => this._sendTo(data, route) );
 	}
 
