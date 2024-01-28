@@ -31,6 +31,7 @@ import { SettingsView } from './pages/settings-view';
 import { RoomView } from './pages/room-view';
 import { AssetsView } from './pages/assets-view';
 import { BoardView } from './pages/board-view';
+import { EditorView } from './pages/editor-view';
 
 import { Helmet } from 'react-helmet';
 import { Message as PrimeMessage } from 'primereact/message';
@@ -180,7 +181,8 @@ export default function App() {
 			{name:'settings', src:<SettingsView {...WebMeetProps} />},
 			{name:'room', src: <RoomView {...WebMeetProps} />},
 			{name:'files', src: <AssetsView />},
-			{name:'board', src:<BoardView />}
+			{name:'board', src:<BoardView />},
+			{name:'editor', src:<EditorView />},
 		]
 	};
 

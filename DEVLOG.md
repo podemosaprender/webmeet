@@ -8,3 +8,6 @@ SEE: https://www.typescriptlang.org/docs/handbook/declaration-files/consumption.
 
 Typed Events, SEE: https://github.com/sindresorhus/emittery#readme
 SEE: https://github.com/sindresorhus/emittery/blob/main/examples/clocktyped.ts
+
+Editor, Monaco=VSCode, with automplete for js, react, etc.
+SEE: https://github.com/suren-atoyan/monaco-react#loader-config

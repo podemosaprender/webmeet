@@ -30,8 +30,13 @@ export function BottomControls({onCommand, callAudioEnabled, callAudioRecording}
 		},
 		{
 			label: 'Board',
-			icon: () => <i className='pi pi-pencil text-3xl'></i>,
+			icon: () => <i className='pi pi-palette text-3xl'></i>,
 			command: () => (onCommand('board')),
+		},
+		{
+			label: 'Editor',
+			icon: () => <i className='pi pi-pencil text-3xl'></i>,
+			command: () => (onCommand('editor')),
 		},
 	];
 
