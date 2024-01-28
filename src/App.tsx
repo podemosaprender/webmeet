@@ -213,7 +213,7 @@ export default function App() {
 				</div>
 
 				{ 
-					!callMgr.isOpen || view=='' || myId=='' ? roomElements.defaultView : 
+					view=='' /*XXX: don't block everythin if disconnected || !callMgr.isOpen || myId==''*/ ? roomElements.defaultView : 
 					roomElements.views.some( v => v.name == view) ? roomElements.views.find( v => v.name == view)?.src :
 					roomElements.unknownView
 				}
