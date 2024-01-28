@@ -16,7 +16,6 @@ monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
 	noSyntaxValidation: false,
 });
 
-window.xm= monaco
 // compiler options
 monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
 	allowNonTsExtensions: true,
@@ -62,9 +61,9 @@ const someJsCode = [
 ].join("\n");
 
 export function EditorView() {
-  const monacoRef = useRef(null);
+	const monacoRef = useRef<Monaco|undefined>(undefined);
 
-	const handleEditorChange: OnChange = (value: string, event: any) => {
+	const handleEditorChange: OnChange = (value: string|undefined, event: any) => {
 		console.log("EditorChange",value, event)
 	}
 
@@ -73,8 +72,27 @@ export function EditorView() {
 		monacoSetup(monaco)
   }
 
-	const handleEditorDidMount: OnMount = (_ignore: any, monaco: Monaco) => {
+	const handleEditorDidMount: OnMount = (editor: any, monaco: Monaco) => {
     monacoRef.current = monaco;
+
+		//SEE: https://microsoft.github.io/monaco-editor/playground.html?source=v0.45.0#example-interacting-with-the-editor-adding-an-action-to-an-editor-instance
+		editor.addAction({
+			id: "mi_accion",
+			label: "MI ACCION!",
+			keybindings: [
+				monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+				monaco.KeyMod.chord( //A: Secuencia, primero ctrl+k, despues ctrl+m
+					monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
+					monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM
+				),
+			],
+			contextMenuGroupId: "navigation",
+			contextMenuOrder: 1.5,
+			precondition: null,
+			run: (ed: any) => { //XXX: get monaco types eg IEditor
+				alert("i'm running => " + ed.getPosition());
+			},
+		});
   } 
 
   return (
