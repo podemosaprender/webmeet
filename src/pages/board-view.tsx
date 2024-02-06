@@ -3,6 +3,8 @@ import { Canvas } from "@react-three/fiber";
 import Polyhedron from "../components/r3f/polyhedron";
 import * as THREE from 'three';
 import { OrbitControls, Stats } from "@react-three/drei";
+import { useControls } from "leva";
+import { useEffect } from "react";
 
 export function BoardView() {
     const polyhedron = [
@@ -11,16 +13,25 @@ export function BoardView() {
         new THREE.DodecahedronGeometry(0.785398)
     ];
 
+    const {grid, color} = useControls({
+        grid: true,
+        color: {
+            r: 255,
+            g: 0,
+            b: 0
+        }
+    });
+
     return (
         <>
             <div className="h-full">
                 <div className="flex flex-row text-center p-3 font-bold h-full">
                     <div className="h-full w-full">
                     <Canvas camera={{ position: [0, 0, 3] }}>
-                        <Polyhedron position={[-0.75, -0.75, 0]} polyhedron={polyhedron} />
-                        <Polyhedron position={[0.75, -0.75, 0]} polyhedron={polyhedron} />
-                        <Polyhedron position={[-0.75, 0.75, 0]} polyhedron={polyhedron} />
-                        <Polyhedron position={[0.75, 0.75, 0]} polyhedron={polyhedron} />
+                        <Polyhedron position={[-0.75, -0.75, 0]} polyhedron={polyhedron} color={color} />
+                        <Polyhedron position={[0.75, -0.75, 0]} polyhedron={polyhedron} color={color} />
+                        <Polyhedron position={[-0.75, 0.75, 0]} polyhedron={polyhedron} color={color} />
+                        <Polyhedron position={[0.75, 0.75, 0]} polyhedron={polyhedron} color={color} />
                         <OrbitControls
                           minAzimuthAngle={-Math.PI / 4}
                           maxAzimuthAngle={Math.PI / 4}
@@ -28,6 +39,12 @@ export function BoardView() {
                           maxPolarAngle={Math.PI - Math.PI / 6}
                         />
                         <Stats />
+                        {
+                        grid && <axesHelper args={[5]} />
+                        }
+                        {
+                        grid && <gridHelper />
+                        }
                     </Canvas>
                     </div>
                 </div>
